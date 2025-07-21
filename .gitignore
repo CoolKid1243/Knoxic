@@ -1,8 +1,8 @@
-# macOS metadata file
+# macOS system files
 .DS_Store
 
-# C/C++ build output
+# Build output
 a.out
 
-# Makefile (if you don’t want to track it)
-Makefile
+# Ignore only SPIR-V files in the shaders/ directory
+shaders/*.spv
