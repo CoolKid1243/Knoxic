@@ -1,7 +1,12 @@
 include .env
 
 CFLAGS = -std=c++17 -I. -I$(VULKAN_SDK_PATH)/include -I/opt/homebrew/include
-LDFLAGS = -L$(VULKAN_SDK_PATH)/lib `pkg-config --static --libs glfw3` -lvulkan
+LDFLAGS = \
+	-L$(VULKAN_SDK_PATH)/lib \
+	-Wl,-headerpad_max_install_names \
+	-Wl,-rpath,$(VULKAN_SDK_PATH)/lib \
+	`pkg-config --static --libs glfw3` \
+	-lvulkan
 
 # Create list of all spv files and set as dependency
 vertSources = $(shell find ./shaders -type f -name "*.vert")
