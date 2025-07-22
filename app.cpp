@@ -45,8 +45,10 @@ namespace knoxic {
     }
 
     void App::createPipeline() {
-        auto pipelineConfig = KnoxicPipeline::defaultPipelineConfigInfo(knoxicSwapChain.width(), 
-                                                                                           knoxicSwapChain.height());
+        auto pipelineConfig = KnoxicPipeline::defaultPipelineConfigInfo(
+            knoxicSwapChain.width(), 
+            knoxicSwapChain.height()
+        );
         pipelineConfig.renderPass = knoxicSwapChain.getRenderPass();
         pipelineConfig.pipelineLayout = pipelineLayout;
         knoxicPipeline = std::make_unique<KnoxicPipeline>(
