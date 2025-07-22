@@ -1,11 +1,20 @@
 #include "app.hpp"
 
+#define GLM_FORCE_RADIANS
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#include <glm/glm.hpp>
+
 #include <array>
 #include <cstdint>
 #include <memory>
 #include <stdexcept>
 
 namespace knoxic {
+
+    struct SimplePushConstantData {
+        glm::vec2 offset;
+        alignas(16) glm::vec3 color;
+    };
 
     App::App() {
         loadModels();
@@ -37,12 +46,17 @@ namespace knoxic {
     }
 
     void App::createPipelineLayout() {
+        VkPushConstantRange pushConstantRange{};
+        pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+        pushConstantRange.offset = 0;
+        pushConstantRange.size = sizeof(SimplePushConstantData);
+
         VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
         pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
         pipelineLayoutInfo.setLayoutCount = 0;
         pipelineLayoutInfo.pSetLayouts = nullptr;
-        pipelineLayoutInfo.pushConstantRangeCount = 0;
-        pipelineLayoutInfo.pPushConstantRanges = nullptr;
+        pipelineLayoutInfo.pushConstantRangeCount = 1;
+        pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
         if (vkCreatePipelineLayout(knoxicDevice.device(), &pipelineLayoutInfo, nullptr, 
         &pipelineLayout) != VK_SUCCESS) {
             throw std::runtime_error("failed to create pipeline layout!");
@@ -112,6 +126,9 @@ namespace knoxic {
     }
 
     void App::recordCommandBuffer(int imageIndex) {
+        static int frame = 0;
+        frame = (frame + 1) % 100;
+
         VkCommandBufferBeginInfo beginInfo{};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
@@ -128,7 +145,7 @@ namespace knoxic {
         renderPassInfo.renderArea.extent = knoxicSwapChain->getSwapChainExtent();
 
         std::array<VkClearValue, 2> clearValues{};
-        clearValues[0].color = {0.0156f, 0.0106f, 0.0081f, 1.0f}; // window background color
+        clearValues[0].color = {0.01f, 0.01f, 0.01f, 1.0f}; // window background color
         clearValues[1].depthStencil = {1.0f, 0};
         renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
         renderPassInfo.pClearValues = clearValues.data();
@@ -148,7 +165,23 @@ namespace knoxic {
 
         knoxicPipeline->bind(commandBuffers[imageIndex]);
         knoxicModel->bind(commandBuffers[imageIndex]);
-        knoxicModel->draw(commandBuffers[imageIndex]);
+
+        for (int j = 0; j < 4; j++) {
+            SimplePushConstantData push{};
+            push.offset = {-0.5f + frame * 0.02f, -0.4f + j * 0.25f};
+            push.color = {0.0f, 0.0f, 0.2f + 0.2f * j};
+
+            vkCmdPushConstants(
+                commandBuffers[imageIndex], 
+                pipelineLayout, 
+                VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 
+                0, 
+                sizeof(SimplePushConstantData), 
+                &push
+            );
+
+            knoxicModel->draw(commandBuffers[imageIndex]);
+        }
 
         vkCmdEndRenderPass(commandBuffers[imageIndex]);
         if (vkEndCommandBuffer(commandBuffers[imageIndex]) != VK_SUCCESS) {
