@@ -1,5 +1,4 @@
 #include "app.hpp"
-#include "vulkan/vulkan_core.h"
 
 #include <cstdint>
 #include <stdexcept>
