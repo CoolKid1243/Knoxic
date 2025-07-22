@@ -16,7 +16,7 @@ namespace knoxic {
             ~KnoxicSwapChain();
 
             KnoxicSwapChain(const KnoxicSwapChain &) = delete;
-            void operator=(const KnoxicSwapChain &) = delete;
+            KnoxicSwapChain &operator=(const KnoxicSwapChain &) = delete;
 
             VkFramebuffer getFrameBuffer(int index) { return swapChainFramebuffers[index]; }
             VkRenderPass getRenderPass() { return renderPass; }

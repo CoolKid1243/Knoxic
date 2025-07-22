@@ -32,7 +32,7 @@ namespace knoxic {
             ~KnoxicPipeline();
 
             KnoxicPipeline(const KnoxicPipeline&) = delete;
-            void operator=(const KnoxicPipeline&) = delete;
+            KnoxicPipeline &operator=(const KnoxicPipeline&) = delete;
 
             void bind(VkCommandBuffer commandBuffer);
             

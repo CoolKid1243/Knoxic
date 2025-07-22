@@ -32,7 +32,7 @@ namespace knoxic {
             ~KnoxicDevice();
 
             KnoxicDevice(const KnoxicDevice &) = delete;
-            void operator=(const KnoxicDevice &) = delete;
+            KnoxicDevice &operator=(const KnoxicDevice &) = delete;
             KnoxicDevice(KnoxicDevice &&) = delete;
             KnoxicDevice &operator=(KnoxicDevice &&) = delete;
 
