@@ -29,11 +29,14 @@ namespace knoxic {
             void createPipelineLayout();
             void createPipeline();
             void createCommandBuffers();
+            void freeCommandBuffers();
             void drawFrame();
+            void recreateSwapChain();
+            void recordCommandBuffer(int imageIndex);
 
             KnoxicWindow knoxicWindow{WIDTH, HEIGHT, "Knoxic"};
             KnoxicDevice knoxicDevice{knoxicWindow};
-            KnoxicSwapChain knoxicSwapChain{knoxicDevice, knoxicWindow.getExtent()};
+            std::unique_ptr<KnoxicSwapChain> knoxicSwapChain;
             std::unique_ptr<KnoxicPipeline> knoxicPipeline;
             VkPipelineLayout pipelineLayout;
             std::vector<VkCommandBuffer> commandBuffers;

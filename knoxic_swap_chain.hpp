@@ -5,6 +5,7 @@
 #include <vulkan/vulkan.h>
 
 #include <vector>
+#include <memory>
 
 namespace knoxic {
 
@@ -13,6 +14,7 @@ namespace knoxic {
             static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
 
             KnoxicSwapChain(KnoxicDevice &deviceRef, VkExtent2D windowExtent);
+            KnoxicSwapChain(KnoxicDevice &deviceRef, VkExtent2D windowExtent, std::shared_ptr<KnoxicSwapChain> previous);
             ~KnoxicSwapChain();
 
             KnoxicSwapChain(const KnoxicSwapChain &) = delete;
@@ -36,6 +38,7 @@ namespace knoxic {
             VkResult submitCommandBuffers(const VkCommandBuffer *buffers, uint32_t *imageIndex);
 
         private:
+            void init();
             void createSwapChain();
             void createImageViews();
             void createDepthResources();
@@ -44,10 +47,8 @@ namespace knoxic {
             void createSyncObjects();
 
             // Helper functions
-            VkSurfaceFormatKHR chooseSwapSurfaceFormat(
-                const std::vector<VkSurfaceFormatKHR> &availableFormats);
-            VkPresentModeKHR chooseSwapPresentMode(
-                const std::vector<VkPresentModeKHR> &availablePresentModes);
+            VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR> &availableFormats);
+            VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR> &availablePresentModes);
             VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities);
 
             VkFormat swapChainImageFormat;
@@ -66,6 +67,7 @@ namespace knoxic {
             VkExtent2D windowExtent;
 
             VkSwapchainKHR swapChain;
+            std::shared_ptr<KnoxicSwapChain> oldSwapChain;
 
             std::vector<VkSemaphore> imageAvailableSemaphores;
             std::vector<VkSemaphore> renderFinishedSemaphores;

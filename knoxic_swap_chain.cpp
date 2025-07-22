@@ -10,6 +10,17 @@
 namespace knoxic {
 
     KnoxicSwapChain::KnoxicSwapChain(KnoxicDevice &deviceRef, VkExtent2D extent) : device{deviceRef}, windowExtent{extent} {
+        init();
+    }
+
+    KnoxicSwapChain::KnoxicSwapChain(KnoxicDevice &deviceRef, VkExtent2D extent, std::shared_ptr<KnoxicSwapChain> previous) : device{deviceRef}, 
+    windowExtent{extent}, oldSwapChain{previous} {
+        init();
+
+        oldSwapChain = nullptr;
+    }
+
+    void KnoxicSwapChain::init() {
         createSwapChain();
         createImageViews();
         createRenderPass();
@@ -148,8 +159,8 @@ namespace knoxic {
             createInfo.pQueueFamilyIndices = queueFamilyIndices;
         } else {
             createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
-            createInfo.queueFamilyIndexCount = 0;      // Optional
-            createInfo.pQueueFamilyIndices = nullptr;  // Optional
+            createInfo.queueFamilyIndexCount = 0;      
+            createInfo.pQueueFamilyIndices = nullptr;  
         }
 
         createInfo.preTransform = swapChainSupport.capabilities.currentTransform;
@@ -158,7 +169,7 @@ namespace knoxic {
         createInfo.presentMode = presentMode;
         createInfo.clipped = VK_TRUE;
 
-        createInfo.oldSwapchain = VK_NULL_HANDLE;
+        createInfo.oldSwapchain = oldSwapChain == nullptr ? VK_NULL_HANDLE : oldSwapChain->swapChain;
 
         if (vkCreateSwapchainKHR(device.device(), &createInfo, nullptr, &swapChain) != VK_SUCCESS) {
             throw std::runtime_error("failed to create swap chain!");

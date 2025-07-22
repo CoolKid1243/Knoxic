@@ -1,6 +1,8 @@
 #include "app.hpp"
+#include "vulkan/vulkan_core.h"
 
 #include <array>
+#include <cstdint>
 #include <memory>
 #include <stdexcept>
 
@@ -9,7 +11,7 @@ namespace knoxic {
     App::App() {
         loadModels();
         createPipelineLayout();
-        createPipeline();
+        recreateSwapChain();
         createCommandBuffers();
     }
 
@@ -49,11 +51,12 @@ namespace knoxic {
     }
 
     void App::createPipeline() {
-        auto pipelineConfig = KnoxicPipeline::defaultPipelineConfigInfo(
-            knoxicSwapChain.width(), 
-            knoxicSwapChain.height()
-        );
-        pipelineConfig.renderPass = knoxicSwapChain.getRenderPass();
+        assert(knoxicSwapChain != nullptr && "Cannot create pipeline before swap chain");
+        assert(pipelineLayout != nullptr && "Cannot create pipeline before pipeline layout");
+
+        PipelineConfigInfo pipelineConfig{};
+        KnoxicPipeline::defaultPipelineConfigInfo(pipelineConfig);
+        pipelineConfig.renderPass = knoxicSwapChain->getRenderPass();
         pipelineConfig.pipelineLayout = pipelineLayout;
         knoxicPipeline = std::make_unique<KnoxicPipeline>(
             knoxicDevice,
@@ -63,8 +66,29 @@ namespace knoxic {
         );
     }
 
+    void App::recreateSwapChain() {
+        auto extent = knoxicWindow.getExtent();
+        while (extent.width == 0 || extent.height == 0) {
+            extent = knoxicWindow.getExtent();
+            glfwWaitEvents();
+        }
+        vkDeviceWaitIdle(knoxicDevice.device());
+
+        if (knoxicSwapChain == nullptr) {
+            knoxicSwapChain = std::make_unique<KnoxicSwapChain>(knoxicDevice, extent);
+        } else {
+            knoxicSwapChain = std::make_unique<KnoxicSwapChain>(knoxicDevice, extent, std::move(knoxicSwapChain));
+            if (knoxicSwapChain->imageCount() != commandBuffers.size()) {
+                freeCommandBuffers();
+                createCommandBuffers();
+            }
+        }
+
+        createPipeline();
+    }
+
     void App::createCommandBuffers() {
-        commandBuffers.resize(knoxicSwapChain.imageCount());
+        commandBuffers.resize(knoxicSwapChain->imageCount());
 
         VkCommandBufferAllocateInfo allocateInfo{};
         allocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -76,50 +100,82 @@ namespace knoxic {
         VK_SUCCESS) {
             throw std::runtime_error("failed to allocate command buffers!");
         }
+    }
 
-        for (int i = 0; i < commandBuffers.size(); i++) {
-            VkCommandBufferBeginInfo beginInfo{};
-            beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    void App::freeCommandBuffers() {
+        vkFreeCommandBuffers(
+            knoxicDevice.device(), 
+            knoxicDevice.getCommandPool(), 
+            static_cast<uint32_t>(commandBuffers.size()), 
+            commandBuffers.data()
+        );
+        commandBuffers.clear();
+    }
 
-            if (vkBeginCommandBuffer(commandBuffers[i], &beginInfo) != VK_SUCCESS) {
-                throw std::runtime_error("failed to begin recording command buffer!");
-            }
+    void App::recordCommandBuffer(int imageIndex) {
+        VkCommandBufferBeginInfo beginInfo{};
+        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
-            VkRenderPassBeginInfo renderPassInfo{};
-            renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-            renderPassInfo.renderPass = knoxicSwapChain.getRenderPass();
-            renderPassInfo.framebuffer = knoxicSwapChain.getFrameBuffer(i);
+        if (vkBeginCommandBuffer(commandBuffers[imageIndex], &beginInfo) != VK_SUCCESS) {
+            throw std::runtime_error("failed to begin recording command buffer!");
+        }
 
-            renderPassInfo.renderArea.offset = {0, 0};
-            renderPassInfo.renderArea.extent = knoxicSwapChain.getSwapChainExtent();
+        VkRenderPassBeginInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        renderPassInfo.renderPass = knoxicSwapChain->getRenderPass();
+        renderPassInfo.framebuffer = knoxicSwapChain->getFrameBuffer(imageIndex);
 
-            std::array<VkClearValue, 2> clearValues{};
-            clearValues[0].color = {0.01f, 0.007f, 0.005f, 1.0f}; // window background color
-            clearValues[1].depthStencil = {1.0f, 0};
-            renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
-            renderPassInfo.pClearValues = clearValues.data();
+        renderPassInfo.renderArea.offset = {0, 0};
+        renderPassInfo.renderArea.extent = knoxicSwapChain->getSwapChainExtent();
 
-            vkCmdBeginRenderPass(commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+        std::array<VkClearValue, 2> clearValues{};
+        clearValues[0].color = {0.01f, 0.007f, 0.005f, 1.0f}; // window background color
+        clearValues[1].depthStencil = {1.0f, 0};
+        renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+        renderPassInfo.pClearValues = clearValues.data();
 
-            knoxicPipeline->bind(commandBuffers[i]);
-            knoxicModel->bind(commandBuffers[i]);
-            knoxicModel->draw(commandBuffers[i]);
+        vkCmdBeginRenderPass(commandBuffers[imageIndex], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-            vkCmdEndRenderPass(commandBuffers[i]);
-            if (vkEndCommandBuffer(commandBuffers[i]) != VK_SUCCESS) {
-                throw std::runtime_error("failed to record command buffer!");
-            }
+        VkViewport viewport{};
+        viewport.x = 0.0f;
+        viewport.y = 0.0f;
+        viewport.width = static_cast<float>(knoxicSwapChain->getSwapChainExtent().width);
+        viewport.height = static_cast<float>(knoxicSwapChain->getSwapChainExtent().height);
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
+        VkRect2D scissor{{0, 0}, knoxicSwapChain->getSwapChainExtent()};
+        vkCmdSetViewport(commandBuffers[imageIndex], 0, 1, &viewport);
+        vkCmdSetScissor(commandBuffers[imageIndex], 0, 1, &scissor);
+
+        knoxicPipeline->bind(commandBuffers[imageIndex]);
+        knoxicModel->bind(commandBuffers[imageIndex]);
+        knoxicModel->draw(commandBuffers[imageIndex]);
+
+        vkCmdEndRenderPass(commandBuffers[imageIndex]);
+        if (vkEndCommandBuffer(commandBuffers[imageIndex]) != VK_SUCCESS) {
+            throw std::runtime_error("failed to record command buffer!");
         }
     }
 
     void App::drawFrame() {
         uint32_t imageIndex;
-        auto result = knoxicSwapChain.acquireNextImage(&imageIndex);
+        auto result = knoxicSwapChain->acquireNextImage(&imageIndex);
+
+        if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+            recreateSwapChain();
+            return;
+        }
         if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
             throw std::runtime_error("failed to acquire swap chain image!");
         }
 
-        result = knoxicSwapChain.submitCommandBuffers(&commandBuffers[imageIndex], &imageIndex);
+        recordCommandBuffer(imageIndex);
+        result = knoxicSwapChain->submitCommandBuffers(&commandBuffers[imageIndex], &imageIndex);
+        if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || knoxicWindow.wasWindowResized()) {
+            knoxicWindow.resetWindowResizedFlag();
+            recreateSwapChain();
+            return;
+        }
         if (result != VK_SUCCESS) {
             throw std::runtime_error("failed to present swap chain image!");
         }
