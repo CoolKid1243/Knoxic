@@ -27,7 +27,11 @@ namespace knoxic {
     }
 
     void App::loadModels() {
-        std::vector<KnoxicModel::Vertex> vertices{{{0.0f, -0.5f}}, {{0.5f, 0.5f}}, {{-0.5f, 0.5f}}};
+        std::vector<KnoxicModel::Vertex> vertices{
+            {{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+            {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
+            {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
+        };
         knoxicModel = std::make_unique<KnoxicModel>(knoxicDevice, vertices);
     }
 
