@@ -128,7 +128,7 @@ namespace knoxic {
         renderPassInfo.renderArea.extent = knoxicSwapChain->getSwapChainExtent();
 
         std::array<VkClearValue, 2> clearValues{};
-        clearValues[0].color = {0.01f, 0.007f, 0.005f, 1.0f}; // window background color
+        clearValues[0].color = {0.0156f, 0.0106f, 0.0081f, 1.0f}; // window background color
         clearValues[1].depthStencil = {1.0f, 0};
         renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
         renderPassInfo.pClearValues = clearValues.data();
