@@ -6,3 +6,5 @@ a.out
 
 # Ignore only SPIR-V files in the shaders/ directory
 shaders/*.spv
+
+.env
