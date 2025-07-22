@@ -1,12 +1,13 @@
 #include "app.hpp"
 
-#include <cstdint>
-#include <stdexcept>
 #include <array>
+#include <memory>
+#include <stdexcept>
 
 namespace knoxic {
 
     App::App() {
+        loadModels();
         createPipelineLayout();
         createPipeline();
         createCommandBuffers();
@@ -23,6 +24,11 @@ namespace knoxic {
 
             vkDeviceWaitIdle(knoxicDevice.device());
         }
+    }
+
+    void App::loadModels() {
+        std::vector<KnoxicModel::Vertex> vertices{{{0.0f, -0.5f}}, {{0.5f, 0.5f}}, {{-0.5f, 0.5f}}};
+        knoxicModel = std::make_unique<KnoxicModel>(knoxicDevice, vertices);
     }
 
     void App::createPipelineLayout() {
@@ -90,7 +96,8 @@ namespace knoxic {
             vkCmdBeginRenderPass(commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
             knoxicPipeline->bind(commandBuffers[i]);
-            vkCmdDraw(commandBuffers[i], 3, 1, 0, 0);
+            knoxicModel->bind(commandBuffers[i]);
+            knoxicModel->draw(commandBuffers[i]);
 
             vkCmdEndRenderPass(commandBuffers[i]);
             if (vkEndCommandBuffer(commandBuffers[i]) != VK_SUCCESS) {

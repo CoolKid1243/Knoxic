@@ -4,6 +4,7 @@
 #include "knoxic_window.hpp"
 #include "knoxic_device.hpp"
 #include "knoxic_swap_chain.hpp"
+#include "knoxic_model.hpp"
 
 #include <memory>
 #include <vector>
@@ -24,6 +25,7 @@ namespace knoxic {
             void run();
 
         private:
+            void loadModels();
             void createPipelineLayout();
             void createPipeline();
             void createCommandBuffers();
@@ -35,5 +37,6 @@ namespace knoxic {
             std::unique_ptr<KnoxicPipeline> knoxicPipeline;
             VkPipelineLayout pipelineLayout;
             std::vector<VkCommandBuffer> commandBuffers;
+            std::unique_ptr<KnoxicModel> knoxicModel;
     };
 }
