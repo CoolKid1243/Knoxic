@@ -1,12 +1,10 @@
 #pragma once
 
-#include "knoxic_pipeline.hpp"
 #include "knoxic_window.hpp"
 #include "knoxic_device.hpp"
-#include "knoxic_swap_chain.hpp"
 #include "knoxic_game_object.hpp"
+#include "knoxic_renderer.hpp"
 
-#include <memory>
 #include <vector>
 
 namespace knoxic {
@@ -26,21 +24,11 @@ namespace knoxic {
 
         private:
             void loadGameObjects();
-            void createPipelineLayout();
-            void createPipeline();
-            void createCommandBuffers();
-            void freeCommandBuffers();
-            void drawFrame();
-            void recreateSwapChain();
-            void recordCommandBuffer(int imageIndex);
-            void renderGameObjects(VkCommandBuffer commandBuffer);
 
             KnoxicWindow knoxicWindow{WIDTH, HEIGHT, "Knoxic"};
             KnoxicDevice knoxicDevice{knoxicWindow};
-            std::unique_ptr<KnoxicSwapChain> knoxicSwapChain;
-            std::unique_ptr<KnoxicPipeline> knoxicPipeline;
-            VkPipelineLayout pipelineLayout;
-            std::vector<VkCommandBuffer> commandBuffers;
+            KnoxicRenderer knoxicRenderer{knoxicWindow, knoxicDevice};
+
             std::vector<KnoxicGameObject> gameObjects;
     };
 }
