@@ -374,7 +374,6 @@ namespace knoxic {
     }
 
     VkPresentModeKHR KnoxicSwapChain::chooseSwapPresentMode(const std::vector<VkPresentModeKHR> &availablePresentModes) {
-        // V-sync is enabled
         for (const auto &availablePresentMode : availablePresentModes) {
             if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
                 std::cout << "Present mode: Mailbox" << std::endl;
