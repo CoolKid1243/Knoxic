@@ -1,4 +1,5 @@
 #include "render_system.hpp"
+#include "knoxic_camera.hpp"
 #include "knoxic_device.hpp"
 
 #define GLM_FORCE_RADIANS
@@ -58,7 +59,7 @@ namespace knoxic {
         );
     }
 
-    void RenderSystem::renderGameObjects(VkCommandBuffer commandBuffer, std::vector<KnoxicGameObject> &gameObjects) {
+    void RenderSystem::renderGameObjects(VkCommandBuffer commandBuffer, std::vector<KnoxicGameObject> &gameObjects, const KnoxicCamera &camera) {
         knoxicPipeline->bind(commandBuffer);
 
         for (auto &obj: gameObjects) {
@@ -67,7 +68,7 @@ namespace knoxic {
 
             SimplePushConstantData push{};
             push.color = obj.color;
-            push.transform = obj.transform.mat4();
+            push.transform = camera.getProjection() * obj.transform.mat4();
 
             vkCmdPushConstants(
                 commandBuffer,

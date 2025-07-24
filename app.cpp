@@ -1,8 +1,6 @@
 #include "app.hpp"
-#include "knoxic_device.hpp"
-#include "knoxic_game_object.hpp"
-#include "knoxic_model.hpp"
 #include "render_system.hpp"
+#include "knoxic_camera.hpp"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -22,13 +20,18 @@ namespace knoxic {
 
     void App::run() {
         RenderSystem renderSystem{knoxicDevice, knoxicRenderer.getSwapChainRenderPass()};
+        KnoxicCamera camera{};
 
         while(!knoxicWindow.shouldClose()) {
             glfwPollEvents();
+
+            float aspect = knoxicRenderer.getAspectRatio();
+            // camera.setOrthographicProjection(-aspect, aspect, -1, 1, -1, 1);
+            camera.setPerspectiveProjection(glm::radians(50.0f), aspect, 0.01f, 10.0f);
             
             if (auto commandBuffer = knoxicRenderer.beginFrame()) {
                 knoxicRenderer.beginSwapChainRenderPass(commandBuffer);
-                renderSystem.renderGameObjects(commandBuffer, gameObjects);
+                renderSystem.renderGameObjects(commandBuffer, gameObjects, camera);
                 knoxicRenderer.endSwapChainRenderPass(commandBuffer);
                 knoxicRenderer.endFrame();
             }
@@ -101,7 +104,7 @@ namespace knoxic {
 
         auto cube = KnoxicGameObject::createGameObject();
         cube.model = knoxicModel;
-        cube.transform.translation = {0.0f, 0.0f, 0.5f};
+        cube.transform.translation = {0.0f, 0.0f, 2.5f};
         cube.transform.scale = {0.5f, 0.5f, 0.5f};
         gameObjects.push_back(std::move(cube));
     }
