@@ -1,5 +1,7 @@
 #include "app.hpp"
 #include "knoxic_device.hpp"
+#include "knoxic_game_object.hpp"
+#include "knoxic_model.hpp"
 #include "render_system.hpp"
 
 #define GLM_FORCE_RADIANS
@@ -35,21 +37,72 @@ namespace knoxic {
         vkDeviceWaitIdle(knoxicDevice.device());
     }
 
-    void App::loadGameObjects() {
+    std::unique_ptr<KnoxicModel> createCubeModel(KnoxicDevice& device, glm::vec3 offset) {
         std::vector<KnoxicModel::Vertex> vertices{
-            {{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-            {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
-            {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
+            // left face (white)
+            {{-0.5f, -0.5f, -0.5f}, {0.9f, 0.9f, 0.9f}},
+            {{-0.5f, 0.5f, 0.5f}, {0.9f, 0.9f, 0.9f}},
+            {{-0.5f, -0.5f, 0.5f}, {0.9f, 0.9f, 0.9f}},
+            {{-0.5f, -0.5f, -0.5f}, {0.9f, 0.9f, 0.9f}},
+            {{-0.5f, 0.5f, -0.5f}, {0.9f, 0.9f, 0.9f}},
+            {{-0.5f, 0.5f, 0.5f}, {0.9f, 0.9f, 0.9f}},
+        
+            // right face (yellow)
+            {{0.5f, -0.5f, -0.5f}, {0.8f, 0.8f, 0.1f}},
+            {{0.5f, 0.5f, 0.5f}, {0.8f, 0.8f, 0.1f}},
+            {{0.5f, -0.5f, 0.5f}, {0.8f, 0.8f, 0.1f}},
+            {{0.5f, -0.5f, -0.5f}, {0.8f, 0.8f, 0.1f}},
+            {{0.5f, 0.5f, -0.5f}, {0.8f, 0.8f, 0.1f}},
+            {{0.5f, 0.5f, 0.5f}, {0.8f, 0.8f, 0.1f}},
+        
+            // top face (orange)
+            {{-0.5f, -0.5f, -0.5f}, {0.9f, 0.6f, 0.1f}},
+            {{0.5f, -0.5f, 0.5f}, {0.9f, 0.6f, 0.1f}},
+            {{-0.5f, -0.5f, 0.5f}, {0.9f, 0.6f, 0.1f}},
+            {{-0.5f, -0.5f, -0.5f}, {0.9f, 0.6f, 0.1f}},
+            {{0.5f, -0.5f, -0.5f}, {0.9f, 0.6f, 0.1f}},
+            {{0.5f, -0.5f, 0.5f}, {0.9f, 0.6f, 0.1f}},
+        
+            // bottom face (red)
+            {{-0.5f, 0.5f, -0.5f}, {0.8f, 0.1f, 0.1f}},
+            {{0.5f, 0.5f, 0.5f}, {0.8f, 0.1f, 0.1f}},
+            {{-0.5f, 0.5f, 0.5f}, {0.8f, 0.1f, 0.1f}},
+            {{-0.5f, 0.5f, -0.5f}, {0.8f, 0.1f, 0.1f}},
+            {{0.5f, 0.5f, -0.5f}, {0.8f, 0.1f, 0.1f}},
+            {{0.5f, 0.5f, 0.5f}, {0.8f, 0.1f, 0.1f}},
+        
+            // nose face (blue)
+            {{-0.5f, -0.5f, 0.5f}, {0.1f, 0.1f, 0.8f}},
+            {{0.5f, 0.5f, 0.5f}, {0.1f, 0.1f, 0.8f}},
+            {{-0.5f, 0.5f, 0.5f}, {0.1f, 0.1f, 0.8f}},
+            {{-0.5f, -0.5f, 0.5f}, {0.1f, 0.1f, 0.8f}},
+            {{0.5f, -0.5f, 0.5f}, {0.1f, 0.1f, 0.8f}},
+            {{0.5f, 0.5f, 0.5f}, {0.1f, 0.1f, 0.8f}},
+        
+            // tail face (green)
+            {{-0.5f, -0.5f, -0.5f}, {0.1f, 0.8f, 0.1f}},
+            {{0.5f, 0.5f, -0.5f}, {0.1f, 0.8f, 0.1f}},
+            {{-0.5f, 0.5f, -0.5f}, {0.1f, 0.8f, 0.1f}},
+            {{-0.5f, -0.5f, -0.5f}, {0.1f, 0.8f, 0.1f}},
+            {{0.5f, -0.5f, -0.5f}, {0.1f, 0.8f, 0.1f}},
+            {{0.5f, 0.5f, -0.5f}, {0.1f, 0.8f, 0.1f}},
+        
         };
-        auto knoxicModel = std::make_shared<KnoxicModel>(knoxicDevice, vertices);
 
-        auto triangle = KnoxicGameObject::createGameObject();
-        triangle.model = knoxicModel;
-        triangle.color = {0.1f, 0.8f, 0.1f};
-        triangle.transform2d.translation.x = 0.2f;
-        triangle.transform2d.scale = {2.0f, 0.5f};
-        triangle.transform2d.rotation = 0.25f * glm::two_pi<float>();
+        for (auto& v : vertices) {
+            v.position += offset;
+        }
 
-        gameObjects.push_back(std::move(triangle));
+        return std::make_unique<KnoxicModel>(device, vertices);
+    }
+
+    void App::loadGameObjects() {
+        std::shared_ptr<KnoxicModel> knoxicModel = createCubeModel(knoxicDevice, {0.0f, 0.0f, 0.0f});
+
+        auto cube = KnoxicGameObject::createGameObject();
+        cube.model = knoxicModel;
+        cube.transform.translation = {0.0f, 0.0f, 0.5f};
+        cube.transform.scale = {0.5f, 0.5f, 0.5f};
+        gameObjects.push_back(std::move(cube));
     }
 }
