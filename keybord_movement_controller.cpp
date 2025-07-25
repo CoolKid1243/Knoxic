@@ -3,6 +3,7 @@
 namespace knoxic {
 
     void KeybordMovementController::moveInPlaneXZ(GLFWwindow *window, float dt, KnoxicGameObject &gameObject) {
+        // Move the camera with keybord (W, A, S, D) input
         float yaw = gameObject.transform.rotation.y;
         const glm::vec3 forwardDir{sin(yaw), 0.0f, cos(yaw)};
         const glm::vec3 rightDir{forwardDir.z, 0.f, -forwardDir.x};
@@ -18,6 +19,11 @@ namespace knoxic {
 
         if (glm::dot(moveDir, moveDir) > std::numeric_limits<float>::epsilon()) {
             gameObject.transform.translation += moveSpeed * dt * glm::normalize(moveDir);
+        }
+
+        // Close the window with (ESC)
+        if (glfwGetKey(window, keys.esc) == GLFW_PRESS) {
+            glfwSetWindowShouldClose(window, true);
         }
     }
 }
