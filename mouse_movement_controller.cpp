@@ -1,7 +1,5 @@
 #include "mouse_movement_controller.hpp"
 
-
-
 namespace knoxic {
 
     void MouseMovementController::init(GLFWwindow* window) {
