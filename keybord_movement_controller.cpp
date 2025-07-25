@@ -3,12 +3,13 @@
 namespace knoxic {
 
     void KeybordMovementController::moveInPlaneXZ(GLFWwindow *window, float dt, KnoxicGameObject &gameObject) {
-        // Move the camera with keybord (W, A, S, D) input
+        // Calculate the directions
         float yaw = gameObject.transform.rotation.y;
         const glm::vec3 forwardDir{sin(yaw), 0.0f, cos(yaw)};
         const glm::vec3 rightDir{forwardDir.z, 0.f, -forwardDir.x};
         const glm::vec3 upDir{0.f, -1.f, 0.f};
 
+        // Movement
         glm::vec3 moveDir{0.f};
         if (glfwGetKey(window, keys.moveForward) == GLFW_PRESS) moveDir += forwardDir;
         if (glfwGetKey(window, keys.moveBackward) == GLFW_PRESS) moveDir -= forwardDir;
