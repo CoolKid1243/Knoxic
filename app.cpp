@@ -3,6 +3,7 @@
 #include "render_system.hpp"
 #include "knoxic_camera.hpp"
 #include "keybord_movement_controller.hpp"
+#include "mouse_movement_controller.hpp"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -27,8 +28,11 @@ namespace knoxic {
 
         auto viewerObject = KnoxicGameObject::createGameObject();
         KeybordMovementController cameraController{};
+        MouseMovementController mouseController{};
 
         auto currentTime = std::chrono::high_resolution_clock::now();
+
+        mouseController.init(knoxicWindow.getGLFWwindow());
 
         while(!knoxicWindow.shouldClose()) {
             glfwPollEvents();
@@ -38,6 +42,7 @@ namespace knoxic {
             currentTime = newTime;
 
             cameraController.moveInPlaneXZ(knoxicWindow.getGLFWwindow(), frameTime, viewerObject);
+            mouseController.updateLook(knoxicWindow.getGLFWwindow(), frameTime, viewerObject);
             camera.setViewYXZ(viewerObject.transform.translation, viewerObject.transform.rotation);
 
             float aspect = knoxicRenderer.getAspectRatio();
