@@ -61,14 +61,20 @@ namespace knoxic {
     }
 
     void App::loadGameObjects() {
-        // Creates the game object
-        std::shared_ptr<KnoxicModel> knoxicModel = KnoxicModel::createModelFromFile(
-            knoxicDevice, "res/models/smooth_vase.obj"
-        );
-        auto gameObj = KnoxicGameObject::createGameObject();
-        gameObj.model = knoxicModel;
-        gameObj.transform.translation = {0.0f, 0.0f, 2.5f};
-        gameObj.transform.scale = glm::vec3{3.0f};
-        gameObjects.push_back(std::move(gameObj));
+        // Creates the flat vase object
+        std::shared_ptr<KnoxicModel> knoxicModel = KnoxicModel::createModelFromFile(knoxicDevice, "res/models/flat_vase.obj");
+        auto flatVase = KnoxicGameObject::createGameObject();
+        flatVase.model = knoxicModel;
+        flatVase.transform.translation = {-0.5f, 0.5f, 2.5f};
+        flatVase.transform.scale = {3.0f, 1.5f, 3.0f};
+        gameObjects.push_back(std::move(flatVase));
+
+        // Creates the smooth vase object
+        knoxicModel = KnoxicModel::createModelFromFile(knoxicDevice, "res/models/smooth_vase.obj");
+        auto smoothVase = KnoxicGameObject::createGameObject();
+        smoothVase.model = knoxicModel;
+        smoothVase.transform.translation = {0.5f, 0.5f, 2.5f};
+        smoothVase.transform.scale = {3.0f, 1.5f, 3.0f};
+        gameObjects.push_back(std::move(smoothVase));
     }
 }
