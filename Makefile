@@ -1,6 +1,6 @@
 include .env
 
-CFLAGS = -std=c++17 -I. -I$(VULKAN_SDK_PATH)/include -I/opt/homebrew/include
+CFLAGS = -std=c++17 -I. -I$(VULKAN_SDK_PATH)/include -I/opt/homebrew/include -I$(TINYOBJ_PATH)
 LDFLAGS = \
 	-L$(VULKAN_SDK_PATH)/lib \
 	-Wl,-headerpad_max_install_names \

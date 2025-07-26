@@ -1,10 +1,8 @@
-# macOS system files
 .DS_Store
 
-# Build output
-a.out
-
-# Ignore only SPIR-V files in the shaders/ directory
 shaders/*.spv
 
+a.out
 .env
+.clangd
+.vscode

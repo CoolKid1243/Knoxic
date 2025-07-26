@@ -1,10 +1,29 @@
 #include "knoxic_model.hpp"
-#include "vulkan/vulkan_core.h"
+#include "knoxic_device.hpp"
+#include "knoxic_utils.hpp"
+#include <cstdint>
+
+#define TINYOBJLOADER_IMPLEMENTATION
+#include <tiny_obj_loader.h>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/hash.hpp>
 
 #include <cassert>
-#include <cstdint>
 #include <cstring>
-#include <vector>
+#include <iostream>
+#include <unordered_map>
+
+namespace std {
+
+    template <>
+    struct hash<knoxic::KnoxicModel::Vertex> {
+        size_t operator()(knoxic::KnoxicModel::Vertex const &vertex) const {
+            size_t seed = 0;
+            knoxic::hashCombine(seed, vertex.position, vertex.color, vertex.normal, vertex.uv);
+            return seed;
+        }
+    };
+}
 
 namespace knoxic {
 
@@ -21,6 +40,13 @@ namespace knoxic {
             vkDestroyBuffer(knoxicDevice.device(), indexBuffer, nullptr);
             vkFreeMemory(knoxicDevice.device(), indexBufferMemory, nullptr);
         }
+    }
+
+    std::unique_ptr<KnoxicModel> KnoxicModel::createModelFromFile(KnoxicDevice &device, const std::string &filePath) {
+        Data data;
+        data.loadModel(filePath);
+        std::cout << "Vertex count: " << data.vertices.size() << "\n";
+        return std::make_unique<KnoxicModel>(device, data);
     }
 
     void KnoxicModel::createVertexBuffers(const std::vector<Vertex> &vertices) {
@@ -129,5 +155,67 @@ namespace knoxic {
         attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
         attributeDescriptions[1].offset = offsetof(Vertex, color);
         return attributeDescriptions;
-    }  
+    }
+
+    void KnoxicModel::Data::loadModel(const std::string &filePath) {
+        tinyobj::attrib_t attrib;
+        std::vector<tinyobj::shape_t> shapes;
+        std::vector<tinyobj::material_t> materials;
+        std::string warn, err;
+
+        if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, filePath.c_str())) {
+            throw std::runtime_error(warn + err);
+        }
+
+        vertices.clear();
+        indices.clear();
+
+        std::unordered_map<Vertex, uint32_t> uniqueVertices{};
+        for (const auto &shape : shapes) {
+            for (const auto &index : shape.mesh.indices) {
+                Vertex vertex{};
+
+                if (index.vertex_index >= 0) {
+                    vertex.position = {
+                        attrib.vertices[3 * index.vertex_index + 0],
+                        attrib.vertices[3 * index.vertex_index + 1],
+                        attrib.vertices[3 * index.vertex_index + 2]
+                    };
+
+                    // Color the vertices if available
+                    auto colorIndex = 3 * index.vertex_index + 2;
+                    if (colorIndex < attrib.colors.size()) {
+                        vertex.color = {
+                            attrib.colors[colorIndex - 2],
+                            attrib.colors[colorIndex - 1],
+                            attrib.colors[colorIndex - 0]
+                        };
+                    } else {
+                        vertex.color = {1.0f, 1.0f, 1.0f}; // if we don't have a vertex color in the file, we just set the model to white
+                    }
+                }
+
+                if (index.normal_index >= 0) {
+                    vertex.normal = {
+                        attrib.normals[3 * index.normal_index + 0],
+                        attrib.normals[3 * index.normal_index + 1],
+                        attrib.normals[3 * index.normal_index + 2]
+                    };
+                }
+
+                if (index.texcoord_index >= 0) {
+                    vertex.uv = {
+                        attrib.texcoords[2 * index.texcoord_index + 0],
+                        attrib.texcoords[2 * index.texcoord_index + 1]
+                    };
+                }
+
+                if (uniqueVertices.count(vertex) == 0) {
+                    uniqueVertices[vertex] = static_cast<uint32_t>(vertices.size());
+                    vertices.push_back(vertex);
+                }
+                indices.push_back(uniqueVertices[vertex]);
+            }
+        }
+    }
 }
