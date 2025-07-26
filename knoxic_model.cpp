@@ -45,7 +45,8 @@ namespace knoxic {
     std::unique_ptr<KnoxicModel> KnoxicModel::createModelFromFile(KnoxicDevice &device, const std::string &filePath) {
         Data data;
         data.loadModel(filePath);
-        std::cout << "Vertex count: " << data.vertices.size() << "\n";
+        //std::cout << filePath <<" | Vertex count: " << data.vertices.size() << "\n"; // print the object file path and verties
+        std::cout << filePath << "\n"; // print the object file path
         return std::make_unique<KnoxicModel>(device, data);
     }
 
