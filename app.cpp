@@ -61,8 +61,10 @@ namespace knoxic {
     }
 
     void App::loadGameObjects() {
+        std::shared_ptr<KnoxicModel> knoxicModel;
+
         // Creates the flat vase object
-        std::shared_ptr<KnoxicModel> knoxicModel = KnoxicModel::createModelFromFile(knoxicDevice, "res/models/flat_vase.obj");
+        knoxicModel = KnoxicModel::createModelFromFile(knoxicDevice, "res/models/flat_vase.obj");
         auto flatVase = KnoxicGameObject::createGameObject();
         flatVase.model = knoxicModel;
         flatVase.transform.translation = {-0.5f, 0.5f, 2.5f};
