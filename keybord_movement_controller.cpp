@@ -1,5 +1,7 @@
 #include "keybord_movement_controller.hpp"
 
+#include "GLFW/glfw3.h"
+
 namespace knoxic {
 
     void KeybordMovementController::moveInPlaneXZ(GLFWwindow *window, float dt, KnoxicGameObject &gameObject) {
@@ -25,6 +27,21 @@ namespace knoxic {
         // Close the window with (ESC)
         if (glfwGetKey(window, keys.esc) == GLFW_PRESS) {
             glfwSetWindowShouldClose(window, true);
+        }
+
+        // Toggle mouse with (TAB)
+        static bool tabPressedLastFrame = false;
+        if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS) {
+            if (!tabPressedLastFrame) {
+                mouseHidden = !mouseHidden;
+                mouseController.mouseHidden = mouseHidden;
+
+                glfwSetInputMode(window, GLFW_CURSOR, mouseHidden ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
+                mouseController.resetCursor(window);
+            }
+            tabPressedLastFrame = true;
+        } else {
+            tabPressedLastFrame = false;
         }
     }
 }

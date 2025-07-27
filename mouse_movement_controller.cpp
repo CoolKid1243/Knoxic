@@ -3,12 +3,14 @@
 namespace knoxic {
 
     void MouseMovementController::init(GLFWwindow* window) {
-        // Start mouse at center of the window
         glfwGetCursorPos(window, &lastX, &lastY);
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); // hide and lock cursor
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        mouseHidden = true;
     }
 
     void MouseMovementController::updateLook(GLFWwindow* window, float dt, KnoxicGameObject& camera) {
+        if (!mouseHidden) return;  // Don't rotate camera if mouse is visible
+
         double xpos, ypos;
         glfwGetCursorPos(window, &xpos, &ypos);
 
@@ -38,5 +40,10 @@ namespace knoxic {
         direction.z = cos(pitch) * cos(yaw);
 
         camera.transform.rotation = glm::vec3(glm::radians(pitch) * sensitivity, glm::radians(yaw) * sensitivity, 0.0f);
+    }
+
+    void MouseMovementController::resetCursor(GLFWwindow* window) {
+        glfwGetCursorPos(window, &lastX, &lastY);
+        firstMouse = true;
     }
 }
