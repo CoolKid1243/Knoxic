@@ -1,10 +1,13 @@
 #include "app.hpp"
+#include "knoxic_frame_info.hpp"
 #include "knoxic_game_object.hpp"
 #include "knoxic_model.hpp"
+#include "knoxic_swap_chain.hpp"
 #include "render_system.hpp"
 #include "knoxic_camera.hpp"
 #include "keybord_movement_controller.hpp"
 #include "mouse_movement_controller.hpp"
+#include "knoxic_buffer.hpp"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -17,23 +20,40 @@
 
 namespace knoxic {
 
-    App::App() {
-        loadGameObjects();
-    }
+    struct GlobalUbo {
+        glm::mat4 projectionView{1.0f};
+        glm::vec3 lightDirection = glm::normalize(glm::vec3{1.0f, -3.0f, 1.0f});
+    };
+
+    App::App() { loadGameObjects(); }
 
     App::~App() {}
 
     void App::run() {
+        std::vector<std::unique_ptr<KnoxicBuffer>> uboBuffers(KnoxicSwapChain::MAX_FRAMES_IN_FLIGHT);
+        for (int i = 0; i < uboBuffers.size(); i++) {
+            uboBuffers[i] = std::make_unique<KnoxicBuffer>(
+                knoxicDevice,
+                sizeof(GlobalUbo),
+                1,
+                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT ,
+                knoxicDevice.properties.limits.minUniformBufferOffsetAlignment
+            );
+
+            uboBuffers[i]->map();
+        }
+
         RenderSystem renderSystem{knoxicDevice, knoxicRenderer.getSwapChainRenderPass()};
         KnoxicCamera camera{};
 
         auto viewerObject = KnoxicGameObject::createGameObject();
-        KeybordMovementController cameraController{};
-        MouseMovementController mouseController{};
+        MouseMovementController cameraControllerMouse{};
+        KeybordMovementController cameraControllerKeybord{cameraControllerMouse};
 
         auto currentTime = std::chrono::high_resolution_clock::now();
 
-        mouseController.init(knoxicWindow.getGLFWwindow());
+        cameraControllerMouse.init(knoxicWindow.getGLFWwindow());
 
         while(!knoxicWindow.shouldClose()) {
             glfwPollEvents();
@@ -42,16 +62,31 @@ namespace knoxic {
             float frameTime = std::chrono::duration<float, std::chrono::seconds::period>(newTime - currentTime).count();
             currentTime = newTime;
 
-            cameraController.moveInPlaneXZ(knoxicWindow.getGLFWwindow(), frameTime, viewerObject);
-            mouseController.updateLook(knoxicWindow.getGLFWwindow(), frameTime, viewerObject);
+            cameraControllerKeybord.moveInPlaneXZ(knoxicWindow.getGLFWwindow(), frameTime, viewerObject);
+            cameraControllerMouse.updateLook(knoxicWindow.getGLFWwindow(), frameTime, viewerObject);
             camera.setViewYXZ(viewerObject.transform.translation, viewerObject.transform.rotation);
 
             float aspect = knoxicRenderer.getAspectRatio();
             camera.setPerspectiveProjection(glm::radians(50.0f), aspect, 0.01f, 100.0f);
             
             if (auto commandBuffer = knoxicRenderer.beginFrame()) {
+                int frameIndex = knoxicRenderer.getFrameIndex();
+                FrameInfo frameInfo {
+                    frameIndex,
+                    frameTime,
+                    commandBuffer,
+                    camera
+                };
+
+                // Update
+                GlobalUbo ubo{};
+                ubo.projectionView = camera.getProjection() * camera.getView();
+                uboBuffers[frameIndex]->writeToBuffer(&ubo);
+                uboBuffers[frameIndex]->flush();
+
+                // Render
                 knoxicRenderer.beginSwapChainRenderPass(commandBuffer);
-                renderSystem.renderGameObjects(commandBuffer, gameObjects, camera);
+                renderSystem.renderGameObjects(frameInfo, gameObjects);
                 knoxicRenderer.endSwapChainRenderPass(commandBuffer);
                 knoxicRenderer.endFrame();
             }

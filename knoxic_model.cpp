@@ -1,7 +1,7 @@
 #include "knoxic_model.hpp"
+#include "knoxic_buffer.hpp"
 #include "knoxic_device.hpp"
 #include "knoxic_utils.hpp"
-#include <cstdint>
 
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <tiny_obj_loader.h>
@@ -32,21 +32,19 @@ namespace knoxic {
         createIndexBuffer(data.indices);
     }
 
-    KnoxicModel::~KnoxicModel() {
-        vkDestroyBuffer(knoxicDevice.device(), vertexBuffer, nullptr);
-        vkFreeMemory(knoxicDevice.device(), vertexBufferMemory, nullptr);
-
-        if (hasIndexBuffer) {
-            vkDestroyBuffer(knoxicDevice.device(), indexBuffer, nullptr);
-            vkFreeMemory(knoxicDevice.device(), indexBufferMemory, nullptr);
-        }
-    }
+    KnoxicModel::~KnoxicModel() {}
 
     std::unique_ptr<KnoxicModel> KnoxicModel::createModelFromFile(KnoxicDevice &device, const std::string &filePath) {
         Data data;
         data.loadModel(filePath);
-        //std::cout << filePath <<" | Vertex count: " << data.vertices.size() << "\n"; // print the object file path and verties
-        std::cout << filePath << "\n"; // print the object file path
+
+        // Print each object and its data
+        std::cout << "Object loaded: " << filePath 
+            << "   Vertex count: " << data.vertices.size()
+            << "   Index count: " << data.indices.size() 
+        << "\n";
+        //std::cout << filePath << "\n"; // print the object file path
+
         return std::make_unique<KnoxicModel>(device, data);
     }
 
@@ -54,34 +52,28 @@ namespace knoxic {
         vertexCount = static_cast<uint32_t>(vertices.size());
         assert(vertexCount >= 3 && "Vertex count must be at least 3");
         VkDeviceSize bufferSize = sizeof(vertices[0]) * vertexCount;
+        uint32_t vertexSize = sizeof(vertices[0]);
 
-        VkBuffer stagingBuffer;
-        VkDeviceMemory stagingBufferMemory;
-        knoxicDevice.createBuffer(
-            bufferSize,
+        KnoxicBuffer stagingBuffer {
+            knoxicDevice,
+            vertexSize,
+            vertexCount,
             VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-            stagingBuffer,
-            stagingBufferMemory
-        );
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+        };
 
-        void *data;
-        vkMapMemory(knoxicDevice.device(), stagingBufferMemory, 0, bufferSize, 0, &data);
-        memcpy(data, vertices.data(), static_cast<size_t>(bufferSize));
-        vkUnmapMemory(knoxicDevice.device(), stagingBufferMemory);
+        stagingBuffer.map();
+        stagingBuffer.writeToBuffer((void *) vertices.data());
 
-        knoxicDevice.createBuffer(
-            bufferSize,
+        vertexBuffer = std::make_unique<KnoxicBuffer>(
+            knoxicDevice,
+            vertexSize,
+            vertexCount,
             VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-            vertexBuffer,
-            vertexBufferMemory
+            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
         );
 
-        knoxicDevice.copyBuffer(stagingBuffer, vertexBuffer, bufferSize);
-
-        vkDestroyBuffer(knoxicDevice.device(), stagingBuffer, nullptr);
-        vkFreeMemory(knoxicDevice.device(), stagingBufferMemory, nullptr);
+        knoxicDevice.copyBuffer(stagingBuffer.getBuffer(), vertexBuffer->getBuffer(), bufferSize);
     }
 
     void KnoxicModel::createIndexBuffer(const std::vector<uint32_t> &indices) {
@@ -91,34 +83,28 @@ namespace knoxic {
         if (!hasIndexBuffer) return;
 
         VkDeviceSize bufferSize = sizeof(indices[0]) * indexCount;
+        uint32_t indexSize = sizeof(indices[0]);
 
-        VkBuffer stagingBuffer;
-        VkDeviceMemory stagingBufferMemory;
-        knoxicDevice.createBuffer(
-            bufferSize,
+        KnoxicBuffer stagingBuffer {
+            knoxicDevice,
+            indexSize,
+            indexCount,
             VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-            stagingBuffer,
-            stagingBufferMemory
-        );
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+        };
 
-        void *data;
-        vkMapMemory(knoxicDevice.device(), stagingBufferMemory, 0, bufferSize, 0, &data);
-        memcpy(data, indices.data(), static_cast<size_t>(bufferSize));
-        vkUnmapMemory(knoxicDevice.device(), stagingBufferMemory);
+        stagingBuffer.map();
+        stagingBuffer.writeToBuffer((void *) indices.data());
 
-        knoxicDevice.createBuffer(
-            bufferSize,
+        indexBuffer = std::make_unique<KnoxicBuffer>(
+            knoxicDevice,
+            indexSize,
+            indexCount,
             VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-            indexBuffer,
-            indexBufferMemory
+            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
         );
 
-        knoxicDevice.copyBuffer(stagingBuffer, indexBuffer, bufferSize);
-
-        vkDestroyBuffer(knoxicDevice.device(), stagingBuffer, nullptr);
-        vkFreeMemory(knoxicDevice.device(), stagingBufferMemory, nullptr);
+        knoxicDevice.copyBuffer(stagingBuffer.getBuffer(), indexBuffer->getBuffer(), bufferSize);
     }
 
     void KnoxicModel::draw(VkCommandBuffer commandBuffer) {
@@ -130,10 +116,11 @@ namespace knoxic {
     }
 
     void KnoxicModel::bind(VkCommandBuffer commandBuffer) {
-        VkBuffer buffers[] = {vertexBuffer};
+        VkBuffer buffers[] = {vertexBuffer->getBuffer()};
         VkDeviceSize offsets[] = {0};
         vkCmdBindVertexBuffers(commandBuffer, 0, 1, buffers, offsets);
-        if (hasIndexBuffer) vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+        
+        if (hasIndexBuffer) vkCmdBindIndexBuffer(commandBuffer, indexBuffer->getBuffer(), 0, VK_INDEX_TYPE_UINT32);
     }
 
     std::vector<VkVertexInputBindingDescription> KnoxicModel::Vertex::getBindingDescriptions() {

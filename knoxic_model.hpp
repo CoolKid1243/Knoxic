@@ -1,6 +1,7 @@
 #pragma once
 
 #include "knoxic_device.hpp"
+#include "knoxic_buffer.hpp"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -51,12 +52,11 @@ namespace knoxic {
 
             KnoxicDevice &knoxicDevice;
 
-            VkBuffer vertexBuffer;
-            VkDeviceMemory vertexBufferMemory;
+            std::unique_ptr<KnoxicBuffer> vertexBuffer;
             uint32_t vertexCount;
 
             bool hasIndexBuffer = false;
-            VkBuffer indexBuffer;
+            std::unique_ptr<KnoxicBuffer> indexBuffer;
             VkDeviceMemory indexBufferMemory;
             uint32_t indexCount;
     };

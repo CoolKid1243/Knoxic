@@ -3,7 +3,7 @@
 #include "knoxic_pipeline.hpp"
 #include "knoxic_device.hpp"
 #include "knoxic_game_object.hpp"
-#include "knoxic_camera.hpp"
+#include "knoxic_frame_info.hpp"
 
 #include <memory>
 #include <vector>
@@ -18,7 +18,7 @@ namespace knoxic {
             RenderSystem(const RenderSystem &) = delete;
             RenderSystem &operator=(const RenderSystem &) = delete;
 
-            void renderGameObjects(VkCommandBuffer commandBuffer, std::vector<KnoxicGameObject> &gameObjects, const KnoxicCamera &camera);
+            void renderGameObjects(FrameInfo &frameInfo, std::vector<KnoxicGameObject> &gameObjects);
 
         private:
             void createPipelineLayout();

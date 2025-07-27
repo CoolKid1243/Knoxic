@@ -1,6 +1,7 @@
 #include "render_system.hpp"
 #include "knoxic_camera.hpp"
 #include "knoxic_device.hpp"
+#include "knoxic_frame_info.hpp"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -59,10 +60,10 @@ namespace knoxic {
         );
     }
 
-    void RenderSystem::renderGameObjects(VkCommandBuffer commandBuffer, std::vector<KnoxicGameObject> &gameObjects, const KnoxicCamera &camera) {
-        knoxicPipeline->bind(commandBuffer);
+    void RenderSystem::renderGameObjects(FrameInfo &frameInfo, std::vector<KnoxicGameObject> &gameObjects) {
+        knoxicPipeline->bind(frameInfo.commandBuffer);
 
-        auto projectionView = camera.getProjection() * camera.getView();
+        auto projectionView = frameInfo.camera.getProjection() * frameInfo.camera.getView();
 
         for (auto &obj: gameObjects) {
             SimplePushConstantData push{};
@@ -70,15 +71,15 @@ namespace knoxic {
             push.normalMatrix = obj.transform.normalMatrix();
 
             vkCmdPushConstants(
-                commandBuffer,
+                frameInfo.commandBuffer,
                 pipelineLayout, 
                 VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 
                 0, 
                 sizeof(SimplePushConstantData), 
                 &push
             );
-            obj.model->bind(commandBuffer);
-            obj.model->draw(commandBuffer);
+            obj.model->bind(frameInfo.commandBuffer);
+            obj.model->draw(frameInfo.commandBuffer);
         }
     }
 }
