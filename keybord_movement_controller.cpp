@@ -31,7 +31,7 @@ namespace knoxic {
 
         // Toggle mouse with (TAB)
         static bool tabPressedLastFrame = false;
-        if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS) {
+        if (glfwGetKey(window, keys.tab) == GLFW_PRESS) {
             if (!tabPressedLastFrame) {
                 mouseHidden = !mouseHidden;
                 mouseController.mouseHidden = mouseHidden;
