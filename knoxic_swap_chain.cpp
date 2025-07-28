@@ -6,6 +6,7 @@
 #include <iostream>
 #include <limits>
 #include <stdexcept>
+#include <iomanip>
 
 namespace knoxic {
 
@@ -374,21 +375,37 @@ namespace knoxic {
     }
 
     VkPresentModeKHR KnoxicSwapChain::chooseSwapPresentMode(const std::vector<VkPresentModeKHR> &availablePresentModes) {
+        static VkPresentModeKHR lastPrintedMode = static_cast<VkPresentModeKHR>(-1);
+
+        auto printMode = [](const std::string &modeStr) {
+            std::cout << "\rPresent mode: " << std::setw(10) << std::left << modeStr << std::flush;
+        };
+
         for (const auto &availablePresentMode : availablePresentModes) {
             if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
-                std::cout << "Present mode: Mailbox" << std::endl;
+                if (lastPrintedMode != VK_PRESENT_MODE_MAILBOX_KHR) {
+                    printMode("Mailbox");
+                    lastPrintedMode = VK_PRESENT_MODE_MAILBOX_KHR;
+                }
                 return availablePresentMode;
             }
         }
 
         // for (const auto &availablePresentMode : availablePresentModes) {
-        //   if (availablePresentMode == VK_PRESENT_MODE_IMMEDIATE_KHR) {
-        //     std::cout << "Present mode: Immediate" << std::endl;
-        //     return availablePresentMode;
-        //   }
+        //     if (availablePresentMode == VK_PRESENT_MODE_IMMEDIATE_KHR) {
+        //         if (lastPrintedMode != VK_PRESENT_MODE_IMMEDIATE_KHR) {
+        //             printMode("Immediate");
+        //             lastPrintedMode = VK_PRESENT_MODE_IMMEDIATE_KHR;
+        //         }
+        //         return availablePresentMode;
+        //     }
         // }
 
-        std::cout << "Present mode: V-Sync" << std::endl;
+        if (lastPrintedMode != VK_PRESENT_MODE_FIFO_KHR) {
+            printMode("V-Sync");
+            lastPrintedMode = VK_PRESENT_MODE_FIFO_KHR;
+        }
+
         return VK_PRESENT_MODE_FIFO_KHR;
     }
 
