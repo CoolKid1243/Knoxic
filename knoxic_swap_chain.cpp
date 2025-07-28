@@ -378,7 +378,7 @@ namespace knoxic {
         static VkPresentModeKHR lastPrintedMode = static_cast<VkPresentModeKHR>(-1);
 
         auto printMode = [](const std::string &modeStr) {
-            std::cout << "\rPresent mode: " << std::setw(10) << std::left << modeStr << std::flush;
+            std::cout << "\rPresent mode: " << std::setw(10) << std::left << modeStr << std::endl;
         };
 
         for (const auto &availablePresentMode : availablePresentModes) {
