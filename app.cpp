@@ -1,4 +1,5 @@
 #include "app.hpp"
+#include "knoxic_descriptors.hpp"
 #include "knoxic_frame_info.hpp"
 #include "knoxic_game_object.hpp"
 #include "knoxic_model.hpp"
@@ -25,7 +26,14 @@ namespace knoxic {
         glm::vec3 lightDirection = glm::normalize(glm::vec3{1.0f, -3.0f, 1.0f});
     };
 
-    App::App() { loadGameObjects(); }
+    App::App() { 
+        globalPool = KnoxicDescriptorPool::Builder(knoxicDevice)
+            .setMaxSets(KnoxicSwapChain::MAX_FRAMES_IN_FLIGHT)
+            .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, KnoxicSwapChain::MAX_FRAMES_IN_FLIGHT)
+            .build();
+
+        loadGameObjects(); 
+    }
 
     App::~App() {}
 
@@ -44,7 +52,23 @@ namespace knoxic {
             uboBuffers[i]->map();
         }
 
-        RenderSystem renderSystem{knoxicDevice, knoxicRenderer.getSwapChainRenderPass()};
+        auto globalSetLayout = KnoxicDescriptorSetLayout::Builder(knoxicDevice)
+            .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
+            .build();
+
+        std::vector<VkDescriptorSet> globalDescriptorSets(KnoxicSwapChain::MAX_FRAMES_IN_FLIGHT);
+        for (int i = 0; i < globalDescriptorSets.size(); i++) {
+            auto bufferInfo = uboBuffers[i]->descriptorInfo();
+            KnoxicDescriptorWriter(*globalSetLayout, *globalPool)
+                .writeBuffer(0, &bufferInfo)
+                .build(globalDescriptorSets[i]);
+        }
+
+        RenderSystem renderSystem{
+            knoxicDevice,
+            knoxicRenderer.getSwapChainRenderPass(),
+            globalSetLayout->getDescriptorSetLayout()
+        };
         KnoxicCamera camera{};
 
         auto viewerObject = KnoxicGameObject::createGameObject();
@@ -75,7 +99,8 @@ namespace knoxic {
                     frameIndex,
                     frameTime,
                     commandBuffer,
-                    camera
+                    camera,
+                    globalDescriptorSets[frameIndex]
                 };
 
                 // Update

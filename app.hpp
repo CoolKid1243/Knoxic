@@ -4,6 +4,7 @@
 #include "knoxic_device.hpp"
 #include "knoxic_game_object.hpp"
 #include "knoxic_renderer.hpp"
+#include "knoxic_descriptors.hpp"
 
 #include <vector>
 
@@ -29,6 +30,8 @@ namespace knoxic {
             KnoxicDevice knoxicDevice{knoxicWindow};
             KnoxicRenderer knoxicRenderer{knoxicWindow, knoxicDevice};
 
+            // Order of declarations matters
+            std::unique_ptr<KnoxicDescriptorPool> globalPool{};
             std::vector<KnoxicGameObject> gameObjects;
     };
 }

@@ -12,7 +12,7 @@ namespace knoxic {
 
     class RenderSystem {
         public:
-            RenderSystem(KnoxicDevice &device, VkRenderPass renderPass);
+            RenderSystem(KnoxicDevice &device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout);
             ~RenderSystem();
 
             RenderSystem(const RenderSystem &) = delete;
@@ -21,7 +21,7 @@ namespace knoxic {
             void renderGameObjects(FrameInfo &frameInfo, std::vector<KnoxicGameObject> &gameObjects);
 
         private:
-            void createPipelineLayout();
+            void createPipelineLayout(VkDescriptorSetLayout globalSetLayout);
             void createPipeline(VkRenderPass renderPass);
 
             KnoxicDevice &knoxicDevice;

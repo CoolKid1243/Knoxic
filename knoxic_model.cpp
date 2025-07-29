@@ -39,11 +39,12 @@ namespace knoxic {
         data.loadModel(filePath);
 
         // Print each object and its data
-        std::cout << "Object loaded: " << filePath 
-            << "   Vertex count: " << data.vertices.size()
-            << "   Index count: " << data.indices.size() 
-        << "\n";
-        //std::cout << filePath << "\n"; // print the object file path
+        // std::cout << "\n=== Model Loaded ===\n"
+        //     << "File Path    : " << filePath << "\n"
+        //     << "Vertex Count : " << data.vertices.size() << "\n"
+        //     << "Index Count  : " << data.indices.size() << "\n"
+        //     << "====================\n";
+        std::cout << filePath << "\n"; // print the object file path
 
         return std::make_unique<KnoxicModel>(device, data);
     }

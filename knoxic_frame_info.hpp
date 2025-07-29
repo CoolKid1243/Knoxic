@@ -11,5 +11,6 @@ namespace knoxic {
         float frameTime;
         VkCommandBuffer commandBuffer;
         KnoxicCamera &camera;
+        VkDescriptorSet globalDescriptorSet;
     };
 }
