@@ -13,6 +13,8 @@
 #include <iostream>
 #include <unordered_map>
 
+#define ENGINE_DIR "../"
+
 namespace std {
 
     template <>
@@ -36,7 +38,7 @@ namespace knoxic {
 
     std::unique_ptr<KnoxicModel> KnoxicModel::createModelFromFile(KnoxicDevice &device, const std::string &filePath) {
         Data data;
-        data.loadModel(filePath);
+        data.loadModel(ENGINE_DIR + filePath);
 
         // Print each object and its data
         // std::cout << "\n=== Model Loaded ===\n"

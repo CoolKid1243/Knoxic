@@ -1,10 +1,12 @@
 .DS_Store
 
-shaders/*.spv
-
-a.out
+# files
 .env
 .clangd
 .vscode
+envUnix.cmake
+shaders/*.spv
 
+# folders
+build
 res copy
