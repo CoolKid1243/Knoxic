@@ -8,7 +8,7 @@ namespace knoxic {
         // Calculate the directions
         float yaw = gameObject.transform.rotation.y;
         const glm::vec3 forwardDir{sin(yaw), 0.0f, cos(yaw)};
-        const glm::vec3 rightDir{forwardDir.z, 0.f, -forwardDir.x};
+        const glm::vec3 rightDir{cos(yaw), 0.f, -sin(yaw)};
         const glm::vec3 upDir{0.f, -1.f, 0.f};
 
         // Movement

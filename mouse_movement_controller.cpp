@@ -25,21 +25,17 @@ namespace knoxic {
             return;
         }
 
-        xoffset *= lookSpeed * dt;
-        yoffset *= lookSpeed * dt;
+        xoffset *= lookSpeed;
+        yoffset *= lookSpeed;
 
         yaw += xoffset;
         pitch += yoffset;
 
         // Clamp pitch
-        pitch = glm::clamp(pitch, glm::radians(-85.0f), glm::radians(85.0f));
+        pitch = glm::clamp(pitch, -1.5f, 1.5f);
+        yaw = glm::mod(yaw, glm::two_pi<float>());
 
-        glm::vec3 direction;
-        direction.x = cos(pitch) * sin(yaw);
-        direction.y = sin(pitch);
-        direction.z = cos(pitch) * cos(yaw);
-
-        camera.transform.rotation = glm::vec3(glm::radians(pitch) * sensitivity, glm::radians(yaw) * sensitivity, 0.0f);
+        camera.transform.rotation = glm::vec3(pitch, yaw, 0.0f);
     }
 
     void MouseMovementController::resetCursor(GLFWwindow* window) {

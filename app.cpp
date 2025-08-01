@@ -22,8 +22,10 @@
 namespace knoxic {
 
     struct GlobalUbo {
-        alignas (16) glm::mat4 projectionView{1.0f};
-        alignas (16) glm::vec3 lightDirection = glm::normalize(glm::vec3{1.0f, -3.0f, 1.0f});
+        glm::mat4 projectionView{1.0f};
+        glm::vec4 ambientLightColor{1.0f, 1.0f, 1.0f, 0.02f}; // w is intensity
+        glm::vec3 lightPosition{-1.0f};
+        alignas(16) glm::vec4 lightColor{1.0f}; // w is light intensity
     };
 
     App::App() { 
@@ -45,8 +47,7 @@ namespace knoxic {
                 sizeof(GlobalUbo),
                 1,
                 VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT ,
-                knoxicDevice.properties.limits.minUniformBufferOffsetAlignment
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
             );
 
             uboBuffers[i]->map();
@@ -72,6 +73,7 @@ namespace knoxic {
         KnoxicCamera camera{};
 
         auto viewerObject = KnoxicGameObject::createGameObject();
+        viewerObject.transform.translation = {0.0f, 0.0f, -2.5f}; // camera position on creation
         MouseMovementController cameraControllerMouse{};
         KeybordMovementController cameraControllerKeybord{cameraControllerMouse};
 
@@ -127,7 +129,7 @@ namespace knoxic {
         knoxicModel = KnoxicModel::createModelFromFile(knoxicDevice, "res/models/flat_vase.obj");
         auto flatVase = KnoxicGameObject::createGameObject();
         flatVase.model = knoxicModel;
-        flatVase.transform.translation = {-0.5f, 0.5f, 2.5f};
+        flatVase.transform.translation = {-0.5f, 0.5f, 0.0f};
         flatVase.transform.scale = {3.0f, 1.5f, 3.0f};
         gameObjects.push_back(std::move(flatVase));
 
@@ -135,8 +137,16 @@ namespace knoxic {
         knoxicModel = KnoxicModel::createModelFromFile(knoxicDevice, "res/models/smooth_vase.obj");
         auto smoothVase = KnoxicGameObject::createGameObject();
         smoothVase.model = knoxicModel;
-        smoothVase.transform.translation = {0.5f, 0.5f, 2.5f};
+        smoothVase.transform.translation = {0.5f, 0.5f, 0.0f};
         smoothVase.transform.scale = {3.0f, 1.5f, 3.0f};
         gameObjects.push_back(std::move(smoothVase));
+
+        // Creates the floor object
+        knoxicModel = KnoxicModel::createModelFromFile(knoxicDevice, "res/models/quad.obj");
+        auto floor = KnoxicGameObject::createGameObject();
+        floor.model = knoxicModel;
+        floor.transform.translation = {0.0f, 0.5f, 0.0f};
+        floor.transform.scale = {3.0f, 1.0f, 3.0f};
+        gameObjects.push_back(std::move(floor));
     }
 }

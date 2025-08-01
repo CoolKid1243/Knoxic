@@ -105,7 +105,7 @@ namespace knoxic {
         }
 
         isFrameStarted = false;
-        currentFrameIndex = (currentImageIndex + 1) % KnoxicSwapChain::MAX_FRAMES_IN_FLIGHT;
+        currentFrameIndex = (currentFrameIndex + 1) % KnoxicSwapChain::MAX_FRAMES_IN_FLIGHT;
     }
 
     void KnoxicRenderer::beginSwapChainRenderPass(VkCommandBuffer commandBuffer) {

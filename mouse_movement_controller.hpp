@@ -13,7 +13,7 @@ namespace knoxic {
 
         bool mouseHidden = true;
 
-        float lookSpeed = 0.1f;
+        float lookSpeed = 0.0025f;
         bool firstMouse = true;
 
     private:
