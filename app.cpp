@@ -54,7 +54,7 @@ namespace knoxic {
         }
 
         auto globalSetLayout = KnoxicDescriptorSetLayout::Builder(knoxicDevice)
-            .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
+            .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS)
             .build();
 
         std::vector<VkDescriptorSet> globalDescriptorSets(KnoxicSwapChain::MAX_FRAMES_IN_FLIGHT);
@@ -102,7 +102,8 @@ namespace knoxic {
                     frameTime,
                     commandBuffer,
                     camera,
-                    globalDescriptorSets[frameIndex]
+                    globalDescriptorSets[frameIndex],
+                    gameObjects
                 };
 
                 // Update
@@ -113,7 +114,7 @@ namespace knoxic {
 
                 // Render
                 knoxicRenderer.beginSwapChainRenderPass(commandBuffer);
-                renderSystem.renderGameObjects(frameInfo, gameObjects);
+                renderSystem.renderGameObjects(frameInfo);
                 knoxicRenderer.endSwapChainRenderPass(commandBuffer);
                 knoxicRenderer.endFrame();
             }
@@ -131,7 +132,7 @@ namespace knoxic {
         flatVase.model = knoxicModel;
         flatVase.transform.translation = {-0.5f, 0.5f, 0.0f};
         flatVase.transform.scale = {3.0f, 1.5f, 3.0f};
-        gameObjects.push_back(std::move(flatVase));
+        gameObjects.emplace(flatVase.getId(), std::move(flatVase));
 
         // Creates the smooth vase object
         knoxicModel = KnoxicModel::createModelFromFile(knoxicDevice, "res/models/smooth_vase.obj");
@@ -139,7 +140,7 @@ namespace knoxic {
         smoothVase.model = knoxicModel;
         smoothVase.transform.translation = {0.5f, 0.5f, 0.0f};
         smoothVase.transform.scale = {3.0f, 1.5f, 3.0f};
-        gameObjects.push_back(std::move(smoothVase));
+        gameObjects.emplace(smoothVase.getId(), std::move(smoothVase));
 
         // Creates the floor object
         knoxicModel = KnoxicModel::createModelFromFile(knoxicDevice, "res/models/quad.obj");
@@ -147,6 +148,6 @@ namespace knoxic {
         floor.model = knoxicModel;
         floor.transform.translation = {0.0f, 0.5f, 0.0f};
         floor.transform.scale = {3.0f, 1.0f, 3.0f};
-        gameObjects.push_back(std::move(floor));
+        gameObjects.emplace(floor.getId(), std::move(floor));
     }
 }

@@ -61,7 +61,7 @@ namespace knoxic {
         );
     }
 
-    void RenderSystem::renderGameObjects(FrameInfo &frameInfo, std::vector<KnoxicGameObject> &gameObjects) {
+    void RenderSystem::renderGameObjects(FrameInfo &frameInfo) {
         knoxicPipeline->bind(frameInfo.commandBuffer);
 
         vkCmdBindDescriptorSets(
@@ -73,7 +73,9 @@ namespace knoxic {
             0, nullptr
         );
 
-        for (auto &obj: gameObjects) {
+        for (auto &keyValue: frameInfo.gameObjects) {
+            auto &obj = keyValue.second;
+            if (obj.model == nullptr) continue;
             SimplePushConstantData push{};
             push.modelMatrix = obj.transform.mat4();
             push.normalMatrix = obj.transform.normalMatrix();

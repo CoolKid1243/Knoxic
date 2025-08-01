@@ -6,8 +6,6 @@
 #include "knoxic_renderer.hpp"
 #include "knoxic_descriptors.hpp"
 
-#include <vector>
-
 namespace knoxic {
 
     class App {
@@ -32,6 +30,6 @@ namespace knoxic {
 
             // Order of declarations matters
             std::unique_ptr<KnoxicDescriptorPool> globalPool{};
-            std::vector<KnoxicGameObject> gameObjects;
+            KnoxicGameObject::Map gameObjects;
     };
 }

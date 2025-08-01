@@ -2,11 +2,9 @@
 
 #include "knoxic_pipeline.hpp"
 #include "knoxic_device.hpp"
-#include "knoxic_game_object.hpp"
 #include "knoxic_frame_info.hpp"
 
 #include <memory>
-#include <vector>
 
 namespace knoxic {
 
@@ -18,7 +16,7 @@ namespace knoxic {
             RenderSystem(const RenderSystem &) = delete;
             RenderSystem &operator=(const RenderSystem &) = delete;
 
-            void renderGameObjects(FrameInfo &frameInfo, std::vector<KnoxicGameObject> &gameObjects);
+            void renderGameObjects(FrameInfo &frameInfo);
 
         private:
             void createPipelineLayout(VkDescriptorSetLayout globalSetLayout);
