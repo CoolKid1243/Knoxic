@@ -1,11 +1,10 @@
 .DS_Store
 
 # files
-.env
 .clangd
-.vscode
 shaders/*.spv
 
 # folders
+.vscode
 build
 res copy
