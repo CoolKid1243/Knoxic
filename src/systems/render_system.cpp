@@ -1,6 +1,6 @@
 #include "render_system.hpp"
-#include "knoxic_device.hpp"
-#include "knoxic_frame_info.hpp"
+#include "../knoxic_device.hpp"
+#include "../knoxic_frame_info.hpp"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -12,7 +12,7 @@
 
 namespace knoxic {
 
-    struct SimplePushConstantData {
+    struct PushConstantData {
         glm::mat4 modelMatrix{1.0f};
         glm::mat4 normalMatrix{1.0f};
     };
@@ -30,7 +30,7 @@ namespace knoxic {
         VkPushConstantRange pushConstantRange{};
         pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
         pushConstantRange.offset = 0;
-        pushConstantRange.size = sizeof(SimplePushConstantData);
+        pushConstantRange.size = sizeof(PushConstantData);
 
         std::vector<VkDescriptorSetLayout> descriptorSetLayouts{globalSetLayout};
 
@@ -76,7 +76,7 @@ namespace knoxic {
         for (auto &keyValue: frameInfo.gameObjects) {
             auto &obj = keyValue.second;
             if (obj.model == nullptr) continue;
-            SimplePushConstantData push{};
+            PushConstantData push{};
             push.modelMatrix = obj.transform.mat4();
             push.normalMatrix = obj.transform.normalMatrix();
 
@@ -85,7 +85,7 @@ namespace knoxic {
                 pipelineLayout, 
                 VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 
                 0, 
-                sizeof(SimplePushConstantData), 
+                sizeof(PushConstantData), 
                 &push
             );
             obj.model->bind(frameInfo.commandBuffer);

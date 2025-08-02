@@ -4,11 +4,12 @@
 #include "knoxic_game_object.hpp"
 #include "knoxic_model.hpp"
 #include "knoxic_swap_chain.hpp"
-#include "render_system.hpp"
 #include "knoxic_camera.hpp"
 #include "keybord_movement_controller.hpp"
 #include "mouse_movement_controller.hpp"
 #include "knoxic_buffer.hpp"
+#include "systems/render_system.hpp"
+#include "systems/point_light_system.hpp"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -22,7 +23,8 @@
 namespace knoxic {
 
     struct GlobalUbo {
-        glm::mat4 projectionView{1.0f};
+        glm::mat4 projection{1.0f};
+        glm::mat4 view{1.0f};
         glm::vec4 ambientLightColor{1.0f, 1.0f, 1.0f, 0.02f}; // w is intensity
         glm::vec3 lightPosition{-1.0f};
         alignas(16) glm::vec4 lightColor{1.0f}; // w is light intensity
@@ -65,7 +67,12 @@ namespace knoxic {
                 .build(globalDescriptorSets[i]);
         }
 
-        RenderSystem renderSystem{
+        RenderSystem renderSystem {
+            knoxicDevice,
+            knoxicRenderer.getSwapChainRenderPass(),
+            globalSetLayout->getDescriptorSetLayout()
+        };
+        PointLightSystem pointLightSystem {
             knoxicDevice,
             knoxicRenderer.getSwapChainRenderPass(),
             globalSetLayout->getDescriptorSetLayout()
@@ -108,13 +115,15 @@ namespace knoxic {
 
                 // Update
                 GlobalUbo ubo{};
-                ubo.projectionView = camera.getProjection() * camera.getView();
+                ubo.projection = camera.getProjection();
+                ubo.view = camera.getView();
                 uboBuffers[frameIndex]->writeToBuffer(&ubo);
                 uboBuffers[frameIndex]->flush();
 
                 // Render
                 knoxicRenderer.beginSwapChainRenderPass(commandBuffer);
                 renderSystem.renderGameObjects(frameInfo);
+                pointLightSystem.render(frameInfo);
                 knoxicRenderer.endSwapChainRenderPass(commandBuffer);
                 knoxicRenderer.endFrame();
             }

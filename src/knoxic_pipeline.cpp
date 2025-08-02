@@ -2,10 +2,10 @@
 #include "knoxic_model.hpp"
 
 #include <cassert>
-#include "fstream"
-#include "iostream"
 #include <cstdint>
 #include <stdexcept>
+#include <fstream>
+#include <iostream>
 
 #define ENGINE_DIR "../"
 
@@ -69,8 +69,8 @@ namespace knoxic {
         shaderStages[1].pNext = nullptr;
         shaderStages[1].pSpecializationInfo = nullptr;
 
-        auto bindingDescriptions = KnoxicModel::Vertex::getBindingDescriptions();
-        auto attributeDescriptions = KnoxicModel::Vertex::getAttributeDescriptions();
+        auto &bindingDescriptions = configInfo.bindingDescriptions;
+        auto &attributeDescriptions = configInfo.attributeDescriptions;
         VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
         vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
         vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
@@ -186,5 +186,8 @@ namespace knoxic {
         configInfo.dynamicStateInfo.pDynamicStates = configInfo.dynamicStateEnables.data();
         configInfo.dynamicStateInfo.dynamicStateCount = static_cast<uint32_t>(configInfo.dynamicStateEnables.size());
         configInfo.dynamicStateInfo.flags = 0;
+
+        configInfo.bindingDescriptions = KnoxicModel::Vertex::getBindingDescriptions();
+        configInfo.attributeDescriptions = KnoxicModel::Vertex::getAttributeDescriptions();
     }
 }
