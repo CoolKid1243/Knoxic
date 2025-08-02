@@ -19,6 +19,10 @@ namespace knoxic {
         glm::mat3 normalMatrix();
     };
 
+    struct PointLightComponent {
+        float lightIntensity = 1.0f;
+    };
+
     class KnoxicGameObject {
         public:
             using id_t = unsigned int;
@@ -29,6 +33,8 @@ namespace knoxic {
                 return KnoxicGameObject(currentId++);
             }
 
+            static KnoxicGameObject makePointLight(float intensity = 10.0f, float radius = 0.1f, glm::vec3 color = glm::vec3(1.0f));
+
             KnoxicGameObject(const KnoxicGameObject &) = delete;
             KnoxicGameObject &operator=(const KnoxicGameObject &) = delete;
             KnoxicGameObject(KnoxicGameObject &&) = default;
@@ -36,10 +42,11 @@ namespace knoxic {
 
             const id_t getId() { return id; };
 
-            std::shared_ptr<KnoxicModel> model{};
             glm::vec3 color{};
-
             TransformComponent transform{};
+            
+            std::shared_ptr<KnoxicModel> model{};
+            std::unique_ptr<PointLightComponent> pointLight = nullptr;
 
         private:
             KnoxicGameObject(id_t objId) : id{objId} {}

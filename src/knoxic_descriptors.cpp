@@ -26,8 +26,8 @@ namespace knoxic {
     KnoxicDescriptorSetLayout::KnoxicDescriptorSetLayout(KnoxicDevice &knoxicDevice,
     std::unordered_map<uint32_t, VkDescriptorSetLayoutBinding> bindings) : knoxicDevice{knoxicDevice}, bindings{bindings} {
         std::vector<VkDescriptorSetLayoutBinding> setLayoutBindings{};
-        for (auto kv : bindings) {
-            setLayoutBindings.push_back(kv.second);
+        for (auto keyValue : bindings) {
+            setLayoutBindings.push_back(keyValue.second);
         }
 
         VkDescriptorSetLayoutCreateInfo descriptorSetLayoutInfo{};

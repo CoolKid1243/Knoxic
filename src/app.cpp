@@ -22,14 +22,6 @@
 
 namespace knoxic {
 
-    struct GlobalUbo {
-        glm::mat4 projection{1.0f};
-        glm::mat4 view{1.0f};
-        glm::vec4 ambientLightColor{1.0f, 1.0f, 1.0f, 0.02f}; // w is intensity
-        glm::vec3 lightPosition{-1.0f};
-        alignas(16) glm::vec4 lightColor{1.0f}; // w is light intensity
-    };
-
     App::App() { 
         globalPool = KnoxicDescriptorPool::Builder(knoxicDevice)
             .setMaxSets(KnoxicSwapChain::MAX_FRAMES_IN_FLIGHT)
@@ -117,6 +109,7 @@ namespace knoxic {
                 GlobalUbo ubo{};
                 ubo.projection = camera.getProjection();
                 ubo.view = camera.getView();
+                pointLightSystem.update(frameInfo, ubo);
                 uboBuffers[frameIndex]->writeToBuffer(&ubo);
                 uboBuffers[frameIndex]->flush();
 
@@ -158,5 +151,30 @@ namespace knoxic {
         floor.transform.translation = {0.0f, 0.5f, 0.0f};
         floor.transform.scale = {3.0f, 1.0f, 3.0f};
         gameObjects.emplace(floor.getId(), std::move(floor));
+
+        // Create point lights
+        {
+             std::vector<glm::vec3> lightColors{
+                {1.0f, 0.1f, 0.1f},
+                {0.1f, 0.1f, 1.0f},
+                {0.1f, 1.0f, 0.1f},
+                {1.0f, 1.0f, 0.1f},
+                {0.1f, 1.0f, 1.0f},
+                {1.0f, 1.0f, 1.0f}
+            };
+
+            // Create the point lights and rotate them in a ring / circle
+            for (int i = 0; i < lightColors.size(); i++) {
+                auto pointLight = KnoxicGameObject::makePointLight(0.2f);
+                pointLight.color = lightColors[i];
+                auto rotateLight = glm::rotate(
+                    glm::mat4(1.0f),
+                    (i * glm::two_pi<float>()) / lightColors.size(),
+                    {0.0f, -1.0f, 0.0f}
+                );
+                pointLight.transform.translation = glm::vec3(rotateLight * glm::vec4(-1.0f, -1.0f, -1.0f, 1.0f));
+                gameObjects.emplace(pointLight.getId(), std::move(pointLight));
+            }
+        }
     }
 }
