@@ -9,6 +9,7 @@
 
 #include <memory>
 #include <stdexcept>
+#include <map>
 
 namespace knoxic {
 
@@ -52,6 +53,7 @@ namespace knoxic {
 
         PipelineConfigInfo pipelineConfig{};
         KnoxicPipeline::defaultPipelineConfigInfo(pipelineConfig);
+        KnoxicPipeline::enableAlphaBlending(pipelineConfig);
         pipelineConfig.attributeDescriptions.clear();
         pipelineConfig.bindingDescriptions.clear();
         pipelineConfig.renderPass = renderPass;
@@ -75,7 +77,7 @@ namespace knoxic {
             assert(lightIndex < MAX_LIGHTS && "Point lights exceed maximum specified limit");
 
             // Update light position
-            obj.transform.translation = glm::vec3(rotateLight * glm::vec4(obj.transform.translation, 1.0f));
+            //obj.transform.translation = glm::vec3(rotateLight * glm::vec4(obj.transform.translation, 1.0f));
 
             // Copy light to ubo
             ubo.pointLights[lightIndex].position = glm::vec4(obj.transform.translation, 1.0f);
@@ -88,6 +90,18 @@ namespace knoxic {
     }
 
     void PointLightSystem::render(FrameInfo &frameInfo) {
+        // Sort lights
+        std::map<float, KnoxicGameObject::id_t> sorted;
+        for (auto &keyValue : frameInfo.gameObjects) {
+            auto &obj = keyValue.second;
+            if (obj.pointLight == nullptr) continue;
+
+            // Calculate distance
+            auto offset = frameInfo.camera.getPosition() - obj.transform.translation;
+            float disSquared = glm::dot(offset, offset);
+            sorted[disSquared] = obj.getId();
+        }
+
         knoxicPipeline->bind(frameInfo.commandBuffer);
 
         vkCmdBindDescriptorSets(
@@ -99,9 +113,10 @@ namespace knoxic {
             0, nullptr
         );
 
-        for (auto &keyValue : frameInfo.gameObjects) {
-            auto &obj = keyValue.second;
-            if (obj.pointLight == nullptr) continue;
+        // Itterate through the lights in reverse order
+        for (auto it = sorted.rbegin(); it != sorted.rend(); it++) {
+            // Use game obj id to find light object
+            auto &obj = frameInfo.gameObjects.at(it->second);
 
             PointLightPushConstants push{};
             push.position = glm::vec4(obj.transform.translation, 1.0f);
