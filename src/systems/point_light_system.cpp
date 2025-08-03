@@ -77,7 +77,7 @@ namespace knoxic {
             assert(lightIndex < MAX_LIGHTS && "Point lights exceed maximum specified limit");
 
             // Update light position
-            //obj.transform.translation = glm::vec3(rotateLight * glm::vec4(obj.transform.translation, 1.0f));
+            obj.transform.translation = glm::vec3(rotateLight * glm::vec4(obj.transform.translation, 1.0f));
 
             // Copy light to ubo
             ubo.pointLights[lightIndex].position = glm::vec4(obj.transform.translation, 1.0f);

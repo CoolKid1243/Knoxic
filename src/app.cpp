@@ -154,13 +154,13 @@ namespace knoxic {
         gameObjects.emplace(floor.getId(), std::move(floor));
 
         // Creates window object
-        knoxicModel = KnoxicModel::createModelFromFile(knoxicDevice, "res/models/quad.obj");
-        auto windowPlane = KnoxicGameObject::createGameObject();
-        windowPlane.model = knoxicModel;
-        windowPlane.transform.translation = {0.0f, -0.05f, -1.3f};
-        windowPlane.transform.rotation = glm::radians(glm::vec3(90.0f, 0.0f, 0.0f));
-        windowPlane.transform.scale = {0.3f, 1.0f, 0.3f};
-        gameObjects.emplace(windowPlane.getId(), std::move(windowPlane));
+        // knoxicModel = KnoxicModel::createModelFromFile(knoxicDevice, "res/models/quad.obj");
+        // auto windowPlane = KnoxicGameObject::createGameObject();
+        // windowPlane.model = knoxicModel;
+        // windowPlane.transform.translation = {0.0f, -0.05f, -1.3f};
+        // windowPlane.transform.rotation = glm::radians(glm::vec3(90.0f, 0.0f, 0.0f));
+        // windowPlane.transform.scale = {0.3f, 1.0f, 0.3f};
+        // gameObjects.emplace(windowPlane.getId(), std::move(windowPlane));
 
         // Create point lights
         {
