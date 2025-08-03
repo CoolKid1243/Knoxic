@@ -15,7 +15,7 @@ layout(set = 0, binding = 0) uniform GlobalUbo {
     mat4 projection;
     mat4 view;
     vec4 ambientLightColor; // w is intensity
-    PointLight pointLights[10];
+    PointLight pointLights[1000];
     int numLights;
 } ubo;
 
