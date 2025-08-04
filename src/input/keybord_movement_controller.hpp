@@ -1,7 +1,7 @@
 #pragma once
 
-#include "knoxic_game_object.hpp"
-#include "mouse_movement_controller.hpp"
+#include "../object/knoxic_game_object.hpp"
+#include "../input/mouse_movement_controller.hpp"
 
 namespace knoxic {
     

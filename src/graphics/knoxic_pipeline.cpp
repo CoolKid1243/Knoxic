@@ -1,4 +1,4 @@
-#include "knoxic_pipeline.hpp"
+#include "../graphics/knoxic_pipeline.hpp"
 #include "knoxic_model.hpp"
 
 #include <cassert>

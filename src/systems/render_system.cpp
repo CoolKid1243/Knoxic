@@ -1,6 +1,6 @@
 #include "render_system.hpp"
-#include "../knoxic_device.hpp"
-#include "../knoxic_frame_info.hpp"
+#include "../core/knoxic_device.hpp"
+#include "../graphics/knoxic_frame_info.hpp"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE

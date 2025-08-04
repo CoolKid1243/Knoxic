@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../knoxic_pipeline.hpp"
-#include "../knoxic_device.hpp"
-#include "../knoxic_frame_info.hpp"
+#include "../graphics/knoxic_pipeline.hpp"
+#include "../core/knoxic_device.hpp"
+#include "../graphics/knoxic_frame_info.hpp"
 
 #include <memory>
 

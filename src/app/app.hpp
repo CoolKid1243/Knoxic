@@ -1,10 +1,10 @@
 #pragma once
 
-#include "knoxic_window.hpp"
-#include "knoxic_device.hpp"
-#include "knoxic_game_object.hpp"
-#include "knoxic_renderer.hpp"
-#include "knoxic_descriptors.hpp"
+#include "../core/knoxic_window.hpp"
+#include "../core/knoxic_device.hpp"
+#include "../object/knoxic_game_object.hpp"
+#include "../graphics/knoxic_renderer.hpp"
+#include "../core/knoxic_descriptors.hpp"
 
 namespace knoxic {
 

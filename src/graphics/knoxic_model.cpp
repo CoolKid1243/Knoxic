@@ -1,7 +1,7 @@
 #include "knoxic_model.hpp"
-#include "knoxic_buffer.hpp"
-#include "knoxic_device.hpp"
-#include "knoxic_utils.hpp"
+#include "../core/knoxic_buffer.hpp"
+#include "../core/knoxic_device.hpp"
+#include "../core/knoxic_utils.hpp"
 
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <tiny_obj_loader.h>

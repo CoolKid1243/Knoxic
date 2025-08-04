@@ -1,6 +1,6 @@
 #pragma once
 
-#include "knoxic_device.hpp"
+#include "../core/knoxic_device.hpp"
 
 #include <string>
 #include <vector>

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "knoxic_device.hpp"
-#include "knoxic_buffer.hpp"
+#include "../core/knoxic_device.hpp"
+#include "../core/knoxic_buffer.hpp"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE

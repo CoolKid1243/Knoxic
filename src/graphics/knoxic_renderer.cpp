@@ -1,6 +1,6 @@
-#include "knoxic_renderer.hpp"
-#include "knoxic_device.hpp"
-#include "knoxic_swap_chain.hpp"
+#include "../graphics/knoxic_renderer.hpp"
+#include "../core/knoxic_device.hpp"
+#include "../core/knoxic_swap_chain.hpp"
 
 #include <array>
 #include <cassert>

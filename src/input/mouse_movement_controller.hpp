@@ -1,6 +1,6 @@
 #pragma once
 
-#include "knoxic_game_object.hpp"
+#include "../object/knoxic_game_object.hpp"
 
 namespace knoxic {
 
