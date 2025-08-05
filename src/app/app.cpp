@@ -128,62 +128,81 @@ namespace knoxic {
     void App::loadGameObjects() {
         std::shared_ptr<KnoxicModel> knoxicModel;
 
-        // Creates the flat vase object
-        knoxicModel = KnoxicModel::createModelFromFile(knoxicDevice, "res/models/flat_vase.obj");
-        auto flatVase = KnoxicGameObject::createGameObject();
-        flatVase.model = knoxicModel;
-        flatVase.transform.translation = {-0.5f, 0.5f, 0.0f};
-        flatVase.transform.scale = {3.0f, 1.5f, 3.0f};
-        gameObjects.emplace(flatVase.getId(), std::move(flatVase));
-
-        // Creates the smooth vase object
-        knoxicModel = KnoxicModel::createModelFromFile(knoxicDevice, "res/models/smooth_vase.obj");
-        auto smoothVase = KnoxicGameObject::createGameObject();
-        smoothVase.model = knoxicModel;
-        smoothVase.transform.translation = {0.5f, 0.5f, 0.0f};
-        smoothVase.transform.scale = {3.0f, 1.5f, 3.0f};
-        gameObjects.emplace(smoothVase.getId(), std::move(smoothVase));
-
-        // Creates the floor object
-        knoxicModel = KnoxicModel::createModelFromFile(knoxicDevice, "res/models/quad.obj");
-        auto floor = KnoxicGameObject::createGameObject();
-        floor.model = knoxicModel;
-        floor.transform.translation = {0.0f, 0.5f, 0.0f};
-        floor.transform.scale = {3.0f, 1.0f, 3.0f};
-        gameObjects.emplace(floor.getId(), std::move(floor));
-
-        // Creates window object
-        // knoxicModel = KnoxicModel::createModelFromFile(knoxicDevice, "res/models/quad.obj");
-        // auto windowPlane = KnoxicGameObject::createGameObject();
-        // windowPlane.model = knoxicModel;
-        // windowPlane.transform.translation = {0.0f, -0.05f, -1.3f};
-        // windowPlane.transform.rotation = glm::radians(glm::vec3(90.0f, 0.0f, 0.0f));
-        // windowPlane.transform.scale = {0.3f, 1.0f, 0.3f};
-        // gameObjects.emplace(windowPlane.getId(), std::move(windowPlane));
-
-        // Create point lights
+        // -- First scene --
         {
-             std::vector<glm::vec3> lightColors{
-                {1.0f, 0.1f, 0.1f},
-                {0.1f, 0.1f, 1.0f},
-                {0.1f, 1.0f, 0.1f},
-                {1.0f, 1.0f, 0.1f},
-                {0.1f, 1.0f, 1.0f},
-                {1.0f, 1.0f, 1.0f}
-            };
+            // Creates the flat vase object
+            knoxicModel = KnoxicModel::createModelFromFile(knoxicDevice, "res/models/flat_vase.obj");
+            auto flatVase = KnoxicGameObject::createGameObject();
+            flatVase.model = knoxicModel;
+            flatVase.transform.translation = {-0.5f, 0.5f, 0.0f};
+            flatVase.transform.scale = {3.0f, 1.5f, 3.0f};
+            gameObjects.emplace(flatVase.getId(), std::move(flatVase));
 
-            // Create the point lights and rotate them in a ring / circle
-            for (int i = 0; i < lightColors.size(); i++) {
-                auto pointLight = KnoxicGameObject::makePointLight(0.2f);
-                pointLight.color = lightColors[i];
-                auto rotateLight = glm::rotate(
-                    glm::mat4(1.0f),
-                    (i * glm::two_pi<float>()) / lightColors.size(),
-                    {0.0f, -1.0f, 0.0f}
-                );
-                pointLight.transform.translation = glm::vec3(rotateLight * glm::vec4(-1.0f, -1.0f, -1.0f, 1.0f));
-                gameObjects.emplace(pointLight.getId(), std::move(pointLight));
+            // Creates the smooth vase object
+            knoxicModel = KnoxicModel::createModelFromFile(knoxicDevice, "res/models/smooth_vase.obj");
+            auto smoothVase = KnoxicGameObject::createGameObject();
+            smoothVase.model = knoxicModel;
+            smoothVase.transform.translation = {0.5f, 0.5f, 0.0f};
+            smoothVase.transform.scale = {3.0f, 1.5f, 3.0f};
+            gameObjects.emplace(smoothVase.getId(), std::move(smoothVase));
+
+            // Creates the floor object
+            knoxicModel = KnoxicModel::createModelFromFile(knoxicDevice, "res/models/quad.obj");
+            auto floor = KnoxicGameObject::createGameObject();
+            floor.model = knoxicModel;
+            floor.transform.translation = {0.0f, 0.5f, 0.0f};
+            floor.transform.scale = {3.0f, 1.0f, 3.0f};
+            gameObjects.emplace(floor.getId(), std::move(floor));
+
+            // Create point lights
+            {
+                std::vector<glm::vec3> lightColors{
+                    {1.0f, 0.1f, 0.1f},
+                    {0.1f, 0.1f, 1.0f},
+                    {0.1f, 1.0f, 0.1f},
+                    {1.0f, 1.0f, 0.1f},
+                    {0.1f, 1.0f, 1.0f},
+                    {1.0f, 1.0f, 1.0f}
+                };
+
+                // Create the point lights and rotate them in a ring / circle
+                for (int i = 0; i < lightColors.size(); i++) {
+                    auto pointLight = KnoxicGameObject::makePointLight(0.05f);
+                    pointLight.color = lightColors[i];
+                    auto rotateLight = glm::rotate(
+                        glm::mat4(1.0f),
+                        (i * glm::two_pi<float>()) / lightColors.size(),
+                        {0.0f, -1.0f, 0.0f}
+                    );
+                    pointLight.transform.translation = glm::vec3(rotateLight * glm::vec4(-1.0f, -1.0f, -1.0f, 1.0f));
+                    gameObjects.emplace(pointLight.getId(), std::move(pointLight));
+                }
             }
+        }
+
+        // -- Second scene --
+        {
+            // Creates the vase object
+            knoxicModel = KnoxicModel::createModelFromFile(knoxicDevice, "res/models/smooth_vase.obj");
+            auto vase = KnoxicGameObject::createGameObject();
+            vase.model = knoxicModel;
+            vase.transform.translation = {10.0f, 0.5f, 0.0f};
+            vase.transform.scale = {3.0f, 1.5f, 3.0f};
+            gameObjects.emplace(vase.getId(), std::move(vase));
+
+            // Creates a point light
+            auto pointLight1 = KnoxicGameObject::makePointLight(0.05f);
+            pointLight1.color = glm::vec3{1.0f, 1.0f, 1.0f};
+            pointLight1.transform.translation = glm::vec3{10.0f, -0.5f, -2.0f};
+            gameObjects.emplace(pointLight1.getId(), std::move(pointLight1));
+
+            // Creates the floor object
+            knoxicModel = KnoxicModel::createModelFromFile(knoxicDevice, "res/models/quad.obj");
+            auto floor2 = KnoxicGameObject::createGameObject();
+            floor2.model = knoxicModel;
+            floor2.transform.translation = {10.0f, 0.5f, 0.0f};
+            floor2.transform.scale = {3.0f, 1.0f, 3.0f};
+            gameObjects.emplace(floor2.getId(), std::move(floor2));
         }
     }
 }

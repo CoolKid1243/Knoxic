@@ -67,7 +67,8 @@ namespace knoxic {
     }
 
     void PointLightSystem::update(FrameInfo &frameInfo, GlobalUbo &ubo) {
-        auto rotateLight = glm::rotate(glm::mat4(1.0f), frameInfo.frameTime, {0.0f, -1.0f, 0.0f});
+        static float time = 0.0f;
+        time += frameInfo.frameTime;
 
         int lightIndex = 0;
         for (auto &keyValue : frameInfo.gameObjects) {
@@ -76,8 +77,31 @@ namespace knoxic {
 
             assert(lightIndex < MAX_LIGHTS && "Point lights exceed maximum specified limit");
 
-            // Update light position
-            obj.transform.translation = glm::vec3(rotateLight * glm::vec4(obj.transform.translation, 1.0f));
+            for (auto &keyValue : frameInfo.gameObjects) {
+                auto &obj = keyValue.second;
+                if (obj.pointLight == nullptr) continue;
+
+                assert(lightIndex < MAX_LIGHTS && "Point lights exceed maximum specified limit");
+
+                // Scene 1: rotating ring light
+                if (obj.transform.translation.x < 3.0f) {
+                    auto rotateLight = glm::rotate(
+                        glm::mat4(1.0f),
+                        frameInfo.frameTime * 0.12f,
+                        {0.0f, -1.0f, 0.0f}
+                    );
+                    obj.transform.translation = glm::vec3(rotateLight * glm::vec4(obj.transform.translation, 1.0f));
+                }
+                // Scene 2: linear moving point light
+                else {
+                    obj.transform.translation.x = 10.0f + sin(time * 1.0f) * 2.0f;
+                }
+
+                ubo.pointLights[lightIndex].position = glm::vec4(obj.transform.translation, 1.0f);
+                ubo.pointLights[lightIndex].color = glm::vec4(obj.color, obj.pointLight->lightIntensity);
+
+                lightIndex += 1;
+            }
 
             // Copy light to ubo
             ubo.pointLights[lightIndex].position = glm::vec4(obj.transform.translation, 1.0f);
