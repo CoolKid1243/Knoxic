@@ -80,10 +80,14 @@ namespace knoxic {
         createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
         createInfo.pApplicationInfo = &appInfo;
 
-        createInfo.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR; // required for macOS
+        #ifdef __APPLE__
+            createInfo.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR; // required for macOS
+        #endif
 
         auto extensions = getRequiredExtensions();
-        extensions.push_back("VK_KHR_portability_enumeration"); // required for macOS
+        #ifdef __APPLE__
+            extensions.push_back("VK_KHR_portability_enumeration"); // required for macOS
+        #endif
         createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
         createInfo.ppEnabledExtensionNames = extensions.data();
 

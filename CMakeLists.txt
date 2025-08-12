@@ -61,6 +61,11 @@ if (NOT TINYOBJ_PATH)
     set(TINYOBJ_PATH external/tinyobjloader)
 endif()
 
+if (NOT STBIMAGE_PATH)
+    message(STATUS "STBIMAGE_PATH not specified in .env.cmake, using external/stbimage")
+    set(STBIMAGE_PATH external/stbimage)
+endif()
+
 file(GLOB_RECURSE SOURCES ${PROJECT_SOURCE_DIR}/src/*.cpp)
 
 add_executable(${PROJECT_NAME} ${SOURCES})
@@ -85,6 +90,7 @@ if (WIN32)
         ${PROJECT_SOURCE_DIR}/src
         ${Vulkan_INCLUDE_DIRS}
         ${TINYOBJ_PATH}
+        ${STBIMAGE_PATH}
         ${GLFW_INCLUDE_DIRS}
         ${GLM_PATH}
     )
@@ -102,6 +108,7 @@ elseif (UNIX)
     target_include_directories(${PROJECT_NAME} PUBLIC
         ${PROJECT_SOURCE_DIR}/src
         ${TINYOBJ_PATH}
+        ${STBIMAGE_PATH}
     )
 
     target_link_libraries(${PROJECT_NAME} glfw ${Vulkan_LIBRARIES})

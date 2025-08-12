@@ -21,7 +21,7 @@
 
 namespace knoxic {
 
-    App::App() { 
+    App::App() {
         globalPool = KnoxicDescriptorPool::Builder(knoxicDevice)
             .setMaxSets(KnoxicSwapChain::MAX_FRAMES_IN_FLIGHT)
             .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, KnoxicSwapChain::MAX_FRAMES_IN_FLIGHT)
