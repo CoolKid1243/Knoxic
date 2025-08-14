@@ -165,7 +165,7 @@ namespace knoxic {
 
             // Creates the floor object
             knoxicModel = KnoxicModel::createModelFromFile(knoxicDevice, "res/models/quad.obj");
-            auto floor = KnoxicGameObject::createGameObject();
+            auto floor = createGameObjectWithMaterial(knoxicDevice);
             floor.model = knoxicModel;
             floor.transform.translation = {0.0f, 0.5f, 0.0f};
             floor.transform.scale = {3.0f, 1.0f, 3.0f};
@@ -218,13 +218,13 @@ namespace knoxic {
 
             // Creates the floor object
             knoxicModel = KnoxicModel::createModelFromFile(knoxicDevice, "res/models/quad.obj");
-            auto floor2 = KnoxicGameObject::createGameObject();
+            auto floor2 = createGameObjectWithMaterial(knoxicDevice);
             floor2.model = knoxicModel;
             floor2.transform.translation = {10.0f, 0.5f, 0.0f};
             floor2.transform.scale = {3.0f, 1.0f, 3.0f};
-            floor2.material->setColor({0.6f, 0.4f, 0.2f});
-            floor2.material->setMetallic(0.0f);
-            floor2.material->setRoughness(0.9f); 
+            floor2.material->setColor({0.9f, 0.2f, 0.2f});
+            floor2.material->setMetallic(0.7f);
+            floor2.material->setRoughness(0.3f); 
             gameObjects.emplace(floor2.getId(), std::move(floor2));
         }
     }

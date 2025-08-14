@@ -573,4 +573,32 @@ namespace knoxic {
 
         endSingleTimeCommands(commandBuffer);
     }
+
+    std::vector<const char*> KnoxicDevice::getRequiredDeviceExtensions() {
+        std::vector<const char*> extensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
+        
+        #ifdef __APPLE__
+            // Check if portability subset is available
+            uint32_t extensionCount;
+            vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &extensionCount, nullptr);
+            std::vector<VkExtensionProperties> availableExtensions(extensionCount);
+            vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &extensionCount,
+                availableExtensions.data());
+            
+            bool hasPortabilitySubset = false;
+            for (const auto& extension : availableExtensions) {
+                if (strcmp(extension.extensionName, "VK_KHR_portability_subset") == 0) {
+                    hasPortabilitySubset = true;
+                    break;
+                }
+            }
+            
+            if (hasPortabilitySubset) {
+                extensions.push_back("VK_KHR_portability_subset");
+                std::cout << "Adding VK_KHR_portability_subset extension" << std::endl;
+            }
+        #endif
+        
+        return extensions;
+    }
 }
