@@ -1,0 +1,26 @@
+#pragma once
+
+#include "../core/knoxic_device.hpp"
+#include "../core/knoxic_descriptors.hpp"
+#include "../graphics/knoxic_frame_info.hpp"
+
+#include <memory>
+
+namespace knoxic {
+
+    class MaterialSystem {
+        public:
+            MaterialSystem(KnoxicDevice &device);
+            ~MaterialSystem();
+
+            MaterialSystem(const MaterialSystem &) = delete;
+            MaterialSystem &operator=(const MaterialSystem &) = delete;
+
+            std::unique_ptr<KnoxicDescriptorSetLayout> createMaterialSetLayout();
+            
+            void updateMaterials(FrameInfo &frameInfo, KnoxicDescriptorSetLayout& materialSetLayout, KnoxicDescriptorPool& materialPool);
+
+        private:
+            KnoxicDevice &knoxicDevice;
+    };
+}

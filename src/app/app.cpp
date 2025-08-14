@@ -2,6 +2,7 @@
 #include "../graphics/knoxic_frame_info.hpp"
 #include "../object/knoxic_game_object.hpp"
 #include "../graphics/knoxic_model.hpp"
+#include "../graphics/knoxic_material.hpp"
 #include "../core/knoxic_swap_chain.hpp"
 #include "../camera/knoxic_camera.hpp"
 #include "../input/keybord_movement_controller.hpp"
@@ -9,6 +10,7 @@
 #include "../core/knoxic_buffer.hpp"
 #include "../systems/render_system.hpp"
 #include "../systems/point_light_system.hpp"
+#include "../systems/material_system.hpp"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -25,6 +27,11 @@ namespace knoxic {
         globalPool = KnoxicDescriptorPool::Builder(knoxicDevice)
             .setMaxSets(KnoxicSwapChain::MAX_FRAMES_IN_FLIGHT)
             .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, KnoxicSwapChain::MAX_FRAMES_IN_FLIGHT)
+            .build();
+
+        materialPool = KnoxicDescriptorPool::Builder(knoxicDevice)
+            .setMaxSets(1000)
+            .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 4000)
             .build();
 
         loadGameObjects(); 
@@ -50,6 +57,10 @@ namespace knoxic {
             .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS)
             .build();
 
+        // Create material system and its descriptor set layout
+        MaterialSystem materialSystem{knoxicDevice};
+        auto materialSetLayout = materialSystem.createMaterialSetLayout();
+
         std::vector<VkDescriptorSet> globalDescriptorSets(KnoxicSwapChain::MAX_FRAMES_IN_FLIGHT);
         for (int i = 0; i < globalDescriptorSets.size(); i++) {
             auto bufferInfo = uboBuffers[i]->descriptorInfo();
@@ -61,13 +72,16 @@ namespace knoxic {
         RenderSystem renderSystem {
             knoxicDevice,
             knoxicRenderer.getSwapChainRenderPass(),
-            globalSetLayout->getDescriptorSetLayout()
+            globalSetLayout->getDescriptorSetLayout(),
+            materialSetLayout->getDescriptorSetLayout()
         };
+        
         PointLightSystem pointLightSystem {
             knoxicDevice,
             knoxicRenderer.getSwapChainRenderPass(),
             globalSetLayout->getDescriptorSetLayout()
         };
+        
         KnoxicCamera camera{};
 
         auto viewerObject = KnoxicGameObject::createGameObject();
@@ -103,6 +117,9 @@ namespace knoxic {
                     globalDescriptorSets[frameIndex],
                     gameObjects
                 };
+
+                // Update materials
+                materialSystem.updateMaterials(frameInfo, *materialSetLayout, *materialPool);
 
                 // Update
                 GlobalUbo ubo{};
@@ -152,6 +169,9 @@ namespace knoxic {
             floor.model = knoxicModel;
             floor.transform.translation = {0.0f, 0.5f, 0.0f};
             floor.transform.scale = {3.0f, 1.0f, 3.0f};
+            floor.material->setColor({0.2f, 0.4f, 0.7f});
+            floor.material->setMetallic(0.1f);
+            floor.material->setRoughness(0.3f); 
             gameObjects.emplace(floor.getId(), std::move(floor));
 
             // Create point lights
@@ -202,6 +222,9 @@ namespace knoxic {
             floor2.model = knoxicModel;
             floor2.transform.translation = {10.0f, 0.5f, 0.0f};
             floor2.transform.scale = {3.0f, 1.0f, 3.0f};
+            floor2.material->setColor({0.6f, 0.4f, 0.2f});
+            floor2.material->setMetallic(0.0f);
+            floor2.material->setRoughness(0.9f); 
             gameObjects.emplace(floor2.getId(), std::move(floor2));
         }
     }

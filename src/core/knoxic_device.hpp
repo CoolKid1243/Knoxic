@@ -41,6 +41,7 @@ namespace knoxic {
             VkSurfaceKHR surface() { return surface_; }
             VkQueue graphicsQueue() { return graphicsQueue_; }
             VkQueue presentQueue() { return presentQueue_; }
+            VkPhysicalDevice getPhysicalDevice() { return physicalDevice; }
 
             SwapChainSupportDetails getSwapChainSupport() { return querySwapChainSupport(physicalDevice); }
             uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
@@ -53,22 +54,25 @@ namespace knoxic {
                 VkBufferUsageFlags usage,
                 VkMemoryPropertyFlags properties,
                 VkBuffer &buffer,
-                VkDeviceMemory &bufferMemory);
+                VkDeviceMemory &bufferMemory
+            );
             VkCommandBuffer beginSingleTimeCommands();
             void endSingleTimeCommands(VkCommandBuffer commandBuffer);
             void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
-            void copyBufferToImage(
-                VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, uint32_t layerCount);
+            void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, uint32_t layerCount = 1);
 
             void createImageWithInfo(
                 const VkImageCreateInfo &imageInfo,
                 VkMemoryPropertyFlags properties,
                 VkImage &image,
-                VkDeviceMemory &imageMemory);
+                VkDeviceMemory &imageMemory
+            );
+
+            void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
 
             VkPhysicalDeviceProperties properties;
 
-            private:
+        private:
             void createInstance();
             void setupDebugMessenger();
             void createSurface();

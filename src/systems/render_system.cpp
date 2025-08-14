@@ -15,10 +15,18 @@ namespace knoxic {
     struct PushConstantData {
         glm::mat4 modelMatrix{1.0f};
         glm::mat4 normalMatrix{1.0f};
+        
+        glm::vec3 albedo{1.0f, 1.0f, 1.0f};
+        float metallic{0.0f};
+        float roughness{0.5f};
+        float ao{1.0f};
+        glm::vec2 textureOffset{0.0f, 0.0f};
+        glm::vec2 textureScale{1.0f, 1.0f};
     };
 
-    RenderSystem::RenderSystem(KnoxicDevice &device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout) : knoxicDevice{device} {
-        createPipelineLayout(globalSetLayout);
+    RenderSystem::RenderSystem(KnoxicDevice &device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout,
+    VkDescriptorSetLayout materialSetLayout) : knoxicDevice{device} {
+        createPipelineLayout(globalSetLayout, materialSetLayout);
         createPipeline(renderPass);
     }
 
@@ -26,13 +34,13 @@ namespace knoxic {
         vkDestroyPipelineLayout(knoxicDevice.device(), pipelineLayout, nullptr);
     }
 
-    void RenderSystem::createPipelineLayout(VkDescriptorSetLayout globalSetLayout) {
+    void RenderSystem::createPipelineLayout(VkDescriptorSetLayout globalSetLayout, VkDescriptorSetLayout materialSetLayout) {
         VkPushConstantRange pushConstantRange{};
         pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
         pushConstantRange.offset = 0;
         pushConstantRange.size = sizeof(PushConstantData);
 
-        std::vector<VkDescriptorSetLayout> descriptorSetLayouts{globalSetLayout};
+        std::vector<VkDescriptorSetLayout> descriptorSetLayouts{globalSetLayout, materialSetLayout};
 
         VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
         pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -55,8 +63,8 @@ namespace knoxic {
         pipelineConfig.pipelineLayout = pipelineLayout;
         knoxicPipeline = std::make_unique<KnoxicPipeline>(
             knoxicDevice,
-            "shaders/lighting.vert.spv",
-            "shaders/lighting.frag.spv",
+            "shaders/material.vert.spv",
+            "shaders/material.frag.spv",
             pipelineConfig
         );
     }
@@ -76,9 +84,35 @@ namespace knoxic {
         for (auto &keyValue: frameInfo.gameObjects) {
             auto &obj = keyValue.second;
             if (obj.model == nullptr) continue;
+            
             PushConstantData push{};
             push.modelMatrix = obj.transform.mat4();
             push.normalMatrix = obj.transform.normalMatrix();
+            
+            // Set material properties
+            if (obj.material != nullptr && obj.material->material != nullptr) {
+                const auto& matProps = obj.material->material->getProperties();
+                push.albedo = matProps.albedo;
+                push.metallic = matProps.metallic;
+                push.roughness = matProps.roughness;
+                push.ao = matProps.ao;
+                push.textureOffset = matProps.textureOffset;
+                push.textureScale = matProps.textureScale;
+                
+                // Bind material descriptor set
+                VkDescriptorSet materialDescriptorSet = obj.material->material->getDescriptorSet();
+                vkCmdBindDescriptorSets(
+                    frameInfo.commandBuffer,
+                    VK_PIPELINE_BIND_POINT_GRAPHICS,
+                    pipelineLayout,
+                    1, 1, // Set 1 is for materials
+                    &materialDescriptorSet,
+                    0, nullptr
+                );
+            } else {
+                // Use object color if no material
+                push.albedo = obj.color;
+            }
 
             vkCmdPushConstants(
                 frameInfo.commandBuffer,

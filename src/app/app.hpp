@@ -30,6 +30,7 @@ namespace knoxic {
 
             // Order of declarations matters
             std::unique_ptr<KnoxicDescriptorPool> globalPool{};
+            std::unique_ptr<KnoxicDescriptorPool> materialPool{};
             KnoxicGameObject::Map gameObjects;
     };
 }

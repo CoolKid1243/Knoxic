@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../graphics/knoxic_model.hpp"
+#include "../graphics/knoxic_material.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -47,10 +48,18 @@ namespace knoxic {
             
             std::shared_ptr<KnoxicModel> model{};
             std::unique_ptr<PointLightComponent> pointLight = nullptr;
+            std::unique_ptr<MaterialComponent> material = nullptr;
 
         private:
             KnoxicGameObject(id_t objId) : id{objId} {}
 
             id_t id;
     };
+
+    inline KnoxicGameObject createGameObjectWithMaterial(KnoxicDevice& device) {
+        auto gameObject = KnoxicGameObject::createGameObject();
+        gameObject.material = std::make_unique<MaterialComponent>();
+        gameObject.material->material = std::make_shared<KnoxicMaterial>(device);
+        return gameObject;
+    }
 }
