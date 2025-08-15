@@ -149,18 +149,24 @@ namespace knoxic {
         {
             // Creates the flat vase object
             knoxicModel = KnoxicModel::createModelFromFile(knoxicDevice, "res/models/flat_vase.obj");
-            auto flatVase = KnoxicGameObject::createGameObject();
+            auto flatVase = createGameObjectWithMaterial(knoxicDevice);
             flatVase.model = knoxicModel;
             flatVase.transform.translation = {-0.5f, 0.5f, 0.0f};
             flatVase.transform.scale = {3.0f, 1.5f, 3.0f};
+            flatVase.material->setColor({0.2f, 0.4f, 0.7f});
+            flatVase.material->setRoughness(0.5f);
+            flatVase.material->setMetallic(0.0f);
             gameObjects.emplace(flatVase.getId(), std::move(flatVase));
 
             // Creates the smooth vase object
             knoxicModel = KnoxicModel::createModelFromFile(knoxicDevice, "res/models/smooth_vase.obj");
-            auto smoothVase = KnoxicGameObject::createGameObject();
+            auto smoothVase = createGameObjectWithMaterial(knoxicDevice);
             smoothVase.model = knoxicModel;
             smoothVase.transform.translation = {0.5f, 0.5f, 0.0f};
             smoothVase.transform.scale = {3.0f, 1.5f, 3.0f};
+            smoothVase.material->setColor({0.2f, 0.4f, 0.7f});
+            smoothVase.material->setRoughness(0.5f);
+            smoothVase.material->setMetallic(0.0f);
             gameObjects.emplace(smoothVase.getId(), std::move(smoothVase));
 
             // Creates the floor object
@@ -169,9 +175,9 @@ namespace knoxic {
             floor.model = knoxicModel;
             floor.transform.translation = {0.0f, 0.5f, 0.0f};
             floor.transform.scale = {3.0f, 1.0f, 3.0f};
-            floor.material->setColor({0.2f, 0.4f, 0.7f});
-            floor.material->setMetallic(0.1f);
-            floor.material->setRoughness(0.3f); 
+            floor.material->loadTexture("res/textures/missing.png");
+            floor.material->setRoughness(0.5f);
+            floor.material->setMetallic(0.0f);
             gameObjects.emplace(floor.getId(), std::move(floor));
 
             // Create point lights
@@ -204,10 +210,13 @@ namespace knoxic {
         {
             // Creates the vase object
             knoxicModel = KnoxicModel::createModelFromFile(knoxicDevice, "res/models/smooth_vase.obj");
-            auto vase = KnoxicGameObject::createGameObject();
+            auto vase = createGameObjectWithMaterial(knoxicDevice);
             vase.model = knoxicModel;
             vase.transform.translation = {10.0f, 0.5f, 0.0f};
             vase.transform.scale = {3.0f, 1.5f, 3.0f};
+            vase.material->setColor({0.2f, 0.4f, 0.7f});
+            vase.material->setRoughness(0.5f);
+            vase.material->setMetallic(0.0f);
             gameObjects.emplace(vase.getId(), std::move(vase));
 
             // Creates a point light

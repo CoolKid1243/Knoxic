@@ -63,8 +63,8 @@ namespace knoxic {
         pipelineConfig.pipelineLayout = pipelineLayout;
         knoxicPipeline = std::make_unique<KnoxicPipeline>(
             knoxicDevice,
-            "shaders/material.vert.spv",
-            "shaders/material.frag.spv",
+            "shaders/lighting.vert.spv",
+            "shaders/lighting.frag.spv",
             pipelineConfig
         );
     }
