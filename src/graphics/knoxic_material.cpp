@@ -141,7 +141,7 @@ namespace knoxic {
             createTextureImageView(albedoTextureImage, albedoTextureImageView);
             createTextureSampler(albedoTextureSampler);
             hasAlbedoTexture = true;
-            std::cout << "Successfully loaded albedo texture: " << filepath << std::endl;
+            std::cout << filepath << std::endl;
         } catch (const std::exception& e) {
             std::cerr << "Failed to load albedo texture: " << e.what() << std::endl;
             hasAlbedoTexture = false;
@@ -154,7 +154,7 @@ namespace knoxic {
             createTextureImageView(normalTextureImage, normalTextureImageView);
             createTextureSampler(normalTextureSampler);
             hasNormalTexture = true;
-            std::cout << "Successfully loaded normal texture: " << filepath << std::endl;
+            std::cout << filepath << std::endl;
         } catch (const std::exception& e) {
             std::cerr << "Failed to load normal texture: " << e.what() << std::endl;
             hasNormalTexture = false;
@@ -167,7 +167,7 @@ namespace knoxic {
             createTextureImageView(roughnessTextureImage, roughnessTextureImageView);
             createTextureSampler(roughnessTextureSampler);
             hasRoughnessTexture = true;
-            std::cout << "Successfully loaded roughness texture: " << filepath << std::endl;
+            std::cout << filepath << std::endl;
         } catch (const std::exception& e) {
             std::cerr << "Failed to load roughness texture: " << e.what() << std::endl;
             hasRoughnessTexture = false;
@@ -180,7 +180,7 @@ namespace knoxic {
             createTextureImageView(metallicTextureImage, metallicTextureImageView);
             createTextureSampler(metallicTextureSampler);
             hasMetallicTexture = true;
-            std::cout << "Successfully loaded metallic texture: " << filepath << std::endl;
+            std::cout << filepath << std::endl;
         } catch (const std::exception& e) {
             std::cerr << "Failed to load metallic texture: " << e.what() << std::endl;
             hasMetallicTexture = false;
