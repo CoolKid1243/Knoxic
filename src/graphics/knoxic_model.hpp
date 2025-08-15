@@ -9,6 +9,13 @@
 
 #include <memory>
 #include <vector>
+#include <string>
+
+// Forward declarations for Assimp
+struct aiNode;
+struct aiScene;
+struct aiMesh;
+struct aiMaterial;
 
 namespace knoxic {
     
@@ -33,6 +40,11 @@ namespace knoxic {
                 std::vector<uint32_t> indices{};
 
                 void loadModel(const std::string &filePath);
+
+            private:
+                void processNode(aiNode* node, const aiScene* scene);
+                void processMesh(aiMesh* mesh, const aiScene* scene);
+                void loadMaterialTextures(aiMaterial* mat, int type, const std::string& directory);
             };
 
             KnoxicModel(KnoxicDevice &device, const KnoxicModel::Data &data);

@@ -3,8 +3,10 @@
 #include "../core/knoxic_device.hpp"
 #include "../core/knoxic_utils.hpp"
 
-#define TINYOBJLOADER_IMPLEMENTATION
-#include <tiny_obj_loader.h>
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/hash.hpp>
 
@@ -16,7 +18,6 @@
 #define ENGINE_DIR "../"
 
 namespace std {
-
     template <>
     struct hash<knoxic::KnoxicModel::Vertex> {
         size_t operator()(knoxic::KnoxicModel::Vertex const &vertex) const {
@@ -46,7 +47,8 @@ namespace knoxic {
         //     << "Vertex Count : " << data.vertices.size() << "\n"
         //     << "Index Count  : " << data.indices.size() << "\n"
         //     << "====================\n";
-        std::cout << filePath << "\n"; // print the object file path
+
+        //std::cout << filePath << "\n"; // print the object file path
 
         return std::make_unique<KnoxicModel>(device, data);
     }
@@ -146,58 +148,165 @@ namespace knoxic {
     }
 
     void KnoxicModel::Data::loadModel(const std::string &filePath) {
-        tinyobj::attrib_t attrib;
-        std::vector<tinyobj::shape_t> shapes;
-        std::vector<tinyobj::material_t> materials;
-        std::string warn, err;
+        // Create Assimp importer
+        Assimp::Importer importer;
+        
+        // Import settings for better compatibility and performance
+        const aiScene* scene = importer.ReadFile(filePath, 
+            aiProcess_Triangulate |
+            aiProcess_FlipUVs |
+            aiProcess_GenNormals |
+            aiProcess_CalcTangentSpace |
+            aiProcess_JoinIdenticalVertices |
+            aiProcess_SortByPType |
+            aiProcess_ImproveCacheLocality |
+            aiProcess_OptimizeMeshes |
+            aiProcess_OptimizeGraph |
+            aiProcess_ValidateDataStructure
+        );
 
-        if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, filePath.c_str())) {
-            throw std::runtime_error(warn + err);
+        // Check for errors
+        if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
+            std::cerr << "ERROR::ASSIMP:: " << importer.GetErrorString() << std::endl;
+            throw std::runtime_error("Failed to load model: " + filePath);
         }
 
+        // Clear existing data
         vertices.clear();
         indices.clear();
 
+        // Process the root node recursively
+        processNode(scene->mRootNode, scene);
+    }
+
+    void KnoxicModel::Data::processNode(aiNode* node, const aiScene* scene) {
+        // Process all the node's meshes
+        for (unsigned int i = 0; i < node->mNumMeshes; i++) {
+            aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
+            processMesh(mesh, scene);
+        }
+
+        // Process all the node's children
+        for (unsigned int i = 0; i < node->mNumChildren; i++) {
+            processNode(node->mChildren[i], scene);
+        }
+    }
+
+    void KnoxicModel::Data::processMesh(aiMesh* mesh, const aiScene* scene) {
         std::unordered_map<Vertex, uint32_t> uniqueVertices{};
-        for (const auto &shape : shapes) {
-            for (const auto &index : shape.mesh.indices) {
+        
+        // Process vertices
+        for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
+            Vertex vertex{};
+
+            // Position
+            if (mesh->mVertices) {
+                vertex.position = {
+                    mesh->mVertices[i].x,
+                    mesh->mVertices[i].y,
+                    mesh->mVertices[i].z
+                };
+            }
+
+            // Normal
+            if (mesh->mNormals) {
+                vertex.normal = {
+                    mesh->mNormals[i].x,
+                    mesh->mNormals[i].y,
+                    mesh->mNormals[i].z
+                };
+            } else {
+                vertex.normal = {0.0f, 1.0f, 0.0f}; // Default up normal
+            }
+
+            // Texture coordinates
+            if (mesh->mTextureCoords[0]) {
+                vertex.uv = {
+                    mesh->mTextureCoords[0][i].x,
+                    mesh->mTextureCoords[0][i].y
+                };
+            } else {
+                vertex.uv = {0.0f, 0.0f};
+            }
+
+            // Vertex colors
+            if (mesh->mColors[0]) {
+                vertex.color = {
+                    mesh->mColors[0][i].r,
+                    mesh->mColors[0][i].g,
+                    mesh->mColors[0][i].b
+                };
+            } else {
+                vertex.color = {1.0f, 1.0f, 1.0f}; // Default white
+            }
+
+            // Check for unique vertices to avoid duplicates
+            if (uniqueVertices.count(vertex) == 0) {
+                uniqueVertices[vertex] = static_cast<uint32_t>(vertices.size());
+                vertices.push_back(vertex);
+            }
+        }
+
+        // Process indices
+        for (unsigned int i = 0; i < mesh->mNumFaces; i++) {
+            aiFace face = mesh->mFaces[i];
+            for (unsigned int j = 0; j < face.mNumIndices; j++) {
                 Vertex vertex{};
-
-                if (index.vertex_index >= 0) {
+                
+                // Get vertex data for this index
+                unsigned int vertexIndex = face.mIndices[j];
+                
+                if (mesh->mVertices) {
                     vertex.position = {
-                        attrib.vertices[3 * index.vertex_index + 0],
-                        attrib.vertices[3 * index.vertex_index + 1],
-                        attrib.vertices[3 * index.vertex_index + 2]
-                    };
-
-                    vertex.color = {
-                        attrib.colors[3 * index.vertex_index + 0],
-                        attrib.colors[3 * index.vertex_index + 1],
-                        attrib.colors[3 * index.vertex_index + 2]
+                        mesh->mVertices[vertexIndex].x,
+                        mesh->mVertices[vertexIndex].y,
+                        mesh->mVertices[vertexIndex].z
                     };
                 }
 
-                if (index.normal_index >= 0) {
+                if (mesh->mNormals) {
                     vertex.normal = {
-                        attrib.normals[3 * index.normal_index + 0],
-                        attrib.normals[3 * index.normal_index + 1],
-                        attrib.normals[3 * index.normal_index + 2]
+                        mesh->mNormals[vertexIndex].x,
+                        mesh->mNormals[vertexIndex].y,
+                        mesh->mNormals[vertexIndex].z
                     };
+                } else {
+                    vertex.normal = {0.0f, 1.0f, 0.0f};
                 }
 
-                if (index.texcoord_index >= 0) {
+                if (mesh->mTextureCoords[0]) {
                     vertex.uv = {
-                        attrib.texcoords[2 * index.texcoord_index + 0],
-                        attrib.texcoords[2 * index.texcoord_index + 1]
+                        mesh->mTextureCoords[0][vertexIndex].x,
+                        mesh->mTextureCoords[0][vertexIndex].y
                     };
+                } else {
+                    vertex.uv = {0.0f, 0.0f};
                 }
 
-                if (uniqueVertices.count(vertex) == 0) {
-                    uniqueVertices[vertex] = static_cast<uint32_t>(vertices.size());
-                    vertices.push_back(vertex);
+                if (mesh->mColors[0]) {
+                    vertex.color = {
+                        mesh->mColors[0][vertexIndex].r,
+                        mesh->mColors[0][vertexIndex].g,
+                        mesh->mColors[0][vertexIndex].b
+                    };
+                } else {
+                    vertex.color = {1.0f, 1.0f, 1.0f};
                 }
+
                 indices.push_back(uniqueVertices[vertex]);
             }
         }
+
+        // Process material
+        if (mesh->mMaterialIndex >= 0) {
+            aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
+            // For now, we'll just note that materials exist
+            // Future enhancement: load textures here
+        }
+    }
+
+    void KnoxicModel::Data::loadMaterialTextures(aiMaterial* mat, int type, const std::string& directory) {
+        // This method can be implemented later for automatic texture loading
+        // For now, textures are loaded manually through the material system
     }
 }

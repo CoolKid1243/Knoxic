@@ -54,12 +54,31 @@ else()
     message(STATUS "Using glfw lib at: ${GLFW_LIB}")
 endif()
 
-include_directories(external)
-
-if (NOT TINYOBJ_PATH)
-    message(STATUS "TINYOBJ_PATH not specified in .env.cmake, using external/tinyobjloader")
-    set(TINYOBJ_PATH external/tinyobjloader)
+if (DEFINED ASSIMP_PATH)
+    message(STATUS "Using ASSIMP path specified in .env")
+    set(ASSIMP_INCLUDE_DIRS "${ASSIMP_PATH}/include")
+    if (MSVC)
+        set(ASSIMP_LIBRARIES "${ASSIMP_PATH}/lib/assimp-vc142-mt.lib")
+    elseif (CMAKE_GENERATOR STREQUAL "MinGW Makefiles")
+        set(ASSIMP_LIBRARIES "${ASSIMP_PATH}/lib/libassimp.dll.a")
+    endif()
+    set(ASSIMP_FOUND TRUE)
+else()
+    find_package(assimp REQUIRED)
+    if (assimp_FOUND)
+        set(ASSIMP_LIBRARIES assimp::assimp)
+        set(ASSIMP_FOUND TRUE)
+        message(STATUS "Found Assimp using find_package")
+    endif()
 endif()
+
+if (NOT ASSIMP_FOUND)
+    message(FATAL_ERROR "Could not find Assimp library!")
+else()
+    message(STATUS "Using Assimp lib at: ${ASSIMP_LIBRARIES}")
+endif()
+
+include_directories(external)
 
 if (NOT STBIMAGE_PATH)
     message(STATUS "STBIMAGE_PATH not specified in .env.cmake, using external/stbimage")
@@ -89,10 +108,10 @@ if (WIN32)
     target_include_directories(${PROJECT_NAME} PUBLIC
         ${PROJECT_SOURCE_DIR}/src
         ${Vulkan_INCLUDE_DIRS}
-        ${TINYOBJ_PATH}
         ${STBIMAGE_PATH}
         ${GLFW_INCLUDE_DIRS}
         ${GLM_PATH}
+        ${ASSIMP_INCLUDE_DIRS}
     )
 
     target_link_directories(${PROJECT_NAME} PUBLIC
@@ -100,18 +119,25 @@ if (WIN32)
         ${GLFW_LIB}
     )
 
-    target_link_libraries(${PROJECT_NAME} glfw3 vulkan-1)
+    if (DEFINED ASSIMP_PATH)
+        target_link_libraries(${PROJECT_NAME} glfw3 vulkan-1 ${ASSIMP_LIBRARIES})
+    else()
+        target_link_libraries(${PROJECT_NAME} glfw3 vulkan-1 ${ASSIMP_LIBRARIES})
+    endif()
 
 elseif (UNIX)
     message(STATUS "CREATING BUILD FOR UNIX")
 
     target_include_directories(${PROJECT_NAME} PUBLIC
         ${PROJECT_SOURCE_DIR}/src
-        ${TINYOBJ_PATH}
         ${STBIMAGE_PATH}
     )
 
-    target_link_libraries(${PROJECT_NAME} glfw ${Vulkan_LIBRARIES})
+    if (DEFINED ASSIMP_PATH)
+        target_link_libraries(${PROJECT_NAME} glfw ${Vulkan_LIBRARIES} ${ASSIMP_LIBRARIES})
+    else()
+        target_link_libraries(${PROJECT_NAME} glfw ${Vulkan_LIBRARIES} ${ASSIMP_LIBRARIES})
+    endif()
 endif()
 
 find_program(GLSL_VALIDATOR glslangValidator HINTS 

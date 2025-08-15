@@ -141,7 +141,7 @@ namespace knoxic {
             createTextureImageView(albedoTextureImage, albedoTextureImageView);
             createTextureSampler(albedoTextureSampler);
             hasAlbedoTexture = true;
-            std::cout << filepath << std::endl;
+            //std::cout << filepath << std::endl; // print file path
         } catch (const std::exception& e) {
             std::cerr << "Failed to load albedo texture: " << e.what() << std::endl;
             hasAlbedoTexture = false;
