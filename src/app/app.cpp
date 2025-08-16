@@ -169,9 +169,8 @@ namespace knoxic {
             floor.model = knoxicModel;
             floor.transform.translation = {0.0f, 0.5f, 0.0f};
             floor.transform.scale = {3.0f, 1.0f, 3.0f};
-            floor.material->setColor({0.9f, 0.8f, 0.4f});
             floor.material->setMetallic(0.7f);
-            floor.material->setRoughness(0.3f); 
+            floor.material->setRoughness(0.3f);
             gameObjects.emplace(floor.getId(), std::move(floor));
 
             // Create point lights
@@ -209,13 +208,7 @@ namespace knoxic {
             vase.transform.translation = {10.0f, 0.5f, 0.0f};
             vase.transform.scale = {3.0f, 1.5f, 3.0f};
             gameObjects.emplace(vase.getId(), std::move(vase));
-
-            // Creates a point light
-            auto pointLight1 = KnoxicGameObject::makePointLight(knoxicDevice, 0.05f);
-            pointLight1.color = glm::vec3{1.0f, 1.0f, 1.0f};
-            pointLight1.transform.translation = glm::vec3{10.0f, -0.5f, -2.0f};
-            gameObjects.emplace(pointLight1.getId(), std::move(pointLight1));
-
+            
             // Creates the floor object
             knoxicModel = KnoxicModel::createModelFromFile(knoxicDevice, "res/models/quad.obj");
             auto floor2 = KnoxicGameObject::createGameObject(knoxicDevice);
@@ -226,6 +219,44 @@ namespace knoxic {
             floor2.material->setRoughness(0.5f);
             floor2.material->setMetallic(0.0f);
             gameObjects.emplace(floor2.getId(), std::move(floor2));
+
+            // Creates a point light
+            auto pointLight1 = KnoxicGameObject::makePointLight(knoxicDevice, 0.05f);
+            pointLight1.color = glm::vec3{1.0f, 1.0f, 1.0f};
+            pointLight1.transform.translation = glm::vec3{10.0f, -0.5f, -2.0f};
+            gameObjects.emplace(pointLight1.getId(), std::move(pointLight1));
+        }
+
+        // -- Third scene --
+        {
+            // Creates the medievalHelmet object
+            knoxicModel = KnoxicModel::createModelFromFile(knoxicDevice, "res/sketchfab/medieval_helmet/scene.gltf");
+            auto medievalHelmet = KnoxicGameObject::createGameObject(knoxicDevice);
+            medievalHelmet.model = knoxicModel;
+            medievalHelmet.transform.translation = {-10.0f, 0.5f, 0.0f};
+            medievalHelmet.transform.scale = {0.03f, 0.03f,0.03f};
+            medievalHelmet.transform.rotation = {glm::radians(90.0f), 0.0f, 0.0f};
+            medievalHelmet.material->loadTexture("res/sketchfab/medieval_helmet/textures/medieval_helmet.jpeg");
+            medievalHelmet.material->setRoughness(0.02f);
+            medievalHelmet.material->setMetallic(2.0f);
+            gameObjects.emplace(medievalHelmet.getId(), std::move(medievalHelmet));
+
+            // Creates the floor object
+            knoxicModel = KnoxicModel::createModelFromFile(knoxicDevice, "res/models/quad.obj");
+            auto floor3 = KnoxicGameObject::createGameObject(knoxicDevice);
+            floor3.model = knoxicModel;
+            floor3.transform.translation = {-10.0f, 0.5f, 0.0f};
+            floor3.transform.scale = {3.0f, 1.0f, 3.0f};
+            floor3.material->loadTexture("res/textures/woodPanels.jpg");
+            floor3.material->setRoughness(0.5f);
+            floor3.material->setMetallic(0.0f);
+            gameObjects.emplace(floor3.getId(), std::move(floor3));
+
+            // Creates a point light
+            auto pointLight2 = KnoxicGameObject::makePointLight(knoxicDevice, 0.05f);
+            pointLight2.color = glm::vec3{1.0f, 1.0f, 1.0f};
+            pointLight2.transform.translation = glm::vec3{-10.0f, -0.5f, -2.0f};
+            gameObjects.emplace(pointLight2.getId(), std::move(pointLight2));
         }
     }
 }

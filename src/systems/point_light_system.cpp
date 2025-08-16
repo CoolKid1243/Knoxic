@@ -82,9 +82,9 @@ namespace knoxic {
                 if (obj.pointLight == nullptr) continue;
 
                 assert(lightIndex < MAX_LIGHTS && "Point lights exceed maximum specified limit");
-
-                // Scene 1: rotating ring light
-                if (obj.transform.translation.x < 3.0f) {
+                
+                // Scene 1: rotating ring lights
+                if (obj.transform.translation.x > -3.0f && obj.transform.translation.x < 3.0f) {
                     auto rotateLight = glm::rotate(
                         glm::mat4(1.0f),
                         frameInfo.frameTime * 0.12f,
@@ -93,8 +93,22 @@ namespace knoxic {
                     obj.transform.translation = glm::vec3(rotateLight * glm::vec4(obj.transform.translation, 1.0f));
                 }
                 // Scene 2: linear moving point light
-                else {
+                else if (obj.transform.translation.x > 7.0f && obj.transform.translation.x < 13.0f) {
                     obj.transform.translation.x = 10.0f + sin(time * 1.0f) * 2.0f;
+                }
+                // Scene 3: half-circle pendulum oscillation 
+                else if (obj.transform.translation.x > -13.0f && obj.transform.translation.x < -7.0f) {
+                    // Create smooth pendulum motion using sin wave
+                    float pendulumAngle = sin(time * 0.6f) * (glm::pi<float>() / 2.0f); // Half circle (90 degrees each way)
+                    
+                    // Calculate position in half-circle around helmet center
+                    glm::vec3 helmetCenter = glm::vec3(-10.0f, 0.5f, 0.0f);
+                    float radius = 2.0f; // Distance from helmet
+                    
+                    // Calculate new position using pendulum angle
+                    obj.transform.translation.x = helmetCenter.x - radius * sin(pendulumAngle);
+                    obj.transform.translation.y = helmetCenter.y - 1.0f;
+                    obj.transform.translation.z = helmetCenter.z - radius * cos(pendulumAngle) - 0.3f;
                 }
 
                 ubo.pointLights[lightIndex].position = glm::vec4(obj.transform.translation, 1.0f);
