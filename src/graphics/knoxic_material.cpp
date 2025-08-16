@@ -135,20 +135,20 @@ namespace knoxic {
         createTextureSampler(defaultTextureSampler);
     }
 
-    void KnoxicMaterial::loadTexture(const std::string& filepath) {
+    void KnoxicMaterial::loadAlbedoTexture(const std::string& filepath) {
         try {
             createTextureImage(filepath, albedoTextureImage, albedoTextureImageMemory);
             createTextureImageView(albedoTextureImage, albedoTextureImageView);
             createTextureSampler(albedoTextureSampler);
             hasAlbedoTexture = true;
-            //std::cout << filepath << std::endl; // print file path
+            // std::cout << filepath << std::endl; // print file path
         } catch (const std::exception& e) {
             std::cerr << "Failed to load albedo texture: " << e.what() << std::endl;
             hasAlbedoTexture = false;
         }
     }
 
-    void KnoxicMaterial::loadNormalMap(const std::string& filepath) {
+    void KnoxicMaterial::loadNormalTexture(const std::string& filepath) {
         try {
             createTextureImage(filepath, normalTextureImage, normalTextureImageMemory);
             createTextureImageView(normalTextureImage, normalTextureImageView);

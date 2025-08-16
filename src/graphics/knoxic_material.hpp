@@ -37,9 +37,8 @@ namespace knoxic {
             void setTextureOffset(const glm::vec2& offset) { properties.textureOffset = offset; }
             void setTextureScale(const glm::vec2& scale) { properties.textureScale = scale; }
 
-            // Texture loading
-            void loadTexture(const std::string& filepath);
-            void loadNormalMap(const std::string& filepath);
+            void loadAlbedoTexture(const std::string& filepath);
+            void loadNormalTexture(const std::string& filepath);
             void loadRoughnessMap(const std::string& filepath);
             void loadMetallicMap(const std::string& filepath);
 
@@ -102,8 +101,12 @@ namespace knoxic {
             if (material) material->setAlbedo(color); 
         }
         
-        void loadTexture(const std::string& filepath) { 
-            if (material) material->loadTexture(filepath); 
+        void loadAlbedoTexture(const std::string& filepath) { 
+            if (material) material->loadAlbedoTexture(filepath); 
+        }
+        
+        void loadNormalTexture(const std::string& filepath) { 
+            if (material) material->loadNormalTexture(filepath); 
         }
         
         void setMetallic(float metallic) { 

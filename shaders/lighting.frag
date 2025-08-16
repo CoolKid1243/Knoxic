@@ -38,13 +38,47 @@ layout(push_constant) uniform Push {
     vec2 textureScale;
 } push;
 
+// Calculate tangent-bitangent-normal matrix for normal mapping
+mat3 calculateTBN(vec3 normal, vec3 pos, vec2 uv) {
+    // Get edge vectors of the triangle
+    vec3 dp1 = dFdx(pos);
+    vec3 dp2 = dFdy(pos);
+    vec2 duv1 = dFdx(uv);
+    vec2 duv2 = dFdy(uv);
+    
+    // Calculate tangent and bitangent
+    vec3 dp2perp = cross(dp2, normal);
+    vec3 dp1perp = cross(normal, dp1);
+    vec3 tangent = dp2perp * duv1.x + dp1perp * duv2.x;
+    vec3 bitangent = dp2perp * duv1.y + dp1perp * duv2.y;
+    
+    // Construct TBN matrix
+    float invmax = inversesqrt(max(dot(tangent, tangent), dot(bitangent, bitangent)));
+    return mat3(tangent * invmax, bitangent * invmax, normal);
+}
+
 void main() {
     // Sample albedo texture and combine with material color
     vec3 materialColor = push.albedo * texture(albedoTexture, fragUv).rgb;
     
+    // Sample normal map and convert from [0,1] to [-1,1] range
+    vec3 normalMap = texture(normalTexture, fragUv).rgb;
+    normalMap = normalize(normalMap * 2.0 - 1.0);
+    
+    // Calculate TBN matrix
+    vec3 N = normalize(fragNormalWorld);
+    mat3 TBN = calculateTBN(N, fragPosWorld, fragUv);
+    
+    // Transform normal from tangent space to world space
+    vec3 surfaceNormal = normalize(TBN * normalMap);
+    
+    vec3 defaultNormal = vec3(0.5, 0.5, 1.0);
+    if (length(texture(normalTexture, fragUv).rgb - defaultNormal) < 0.1) {
+        surfaceNormal = N;
+    }
+
     vec3 diffuseLight = ubo.ambientLightColor.xyz * ubo.ambientLightColor.w;
     vec3 specularLight = vec3(0.0);
-    vec3 surfaceNormal = normalize(fragNormalWorld);
 
     vec3 cameraPosWorld = ubo.inverseView[3].xyz;
     vec3 viewDirection = normalize(cameraPosWorld - fragPosWorld);
