@@ -203,7 +203,7 @@ namespace knoxic {
         // -- Second scene --
         {
             // Creates the vase object
-            knoxicModel = KnoxicModel::createModelFromFile(knoxicDevice, "res/models/smooth_vase.obj");
+            knoxicModel = KnoxicModel::createModelFromFile(knoxicDevice, "res/models/smooth_vase.fbx");
             auto vase = KnoxicGameObject::createGameObject(knoxicDevice);
             vase.model = knoxicModel;
             vase.transform.translation = {10.0f, 0.5f, 0.0f};
