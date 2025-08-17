@@ -153,6 +153,8 @@ namespace knoxic {
             flatVase.model = knoxicModel;
             flatVase.transform.translation = {-0.5f, 0.5f, 0.0f};
             flatVase.transform.scale = {3.0f, 1.5f, 3.0f};
+            flatVase.material->setRoughness(0.8f);
+            flatVase.material->setMetallic(0.7f);
             gameObjects.emplace(flatVase.getId(), std::move(flatVase));
 
             // Creates the smooth vase object
@@ -161,6 +163,8 @@ namespace knoxic {
             smoothVase.model = knoxicModel;
             smoothVase.transform.translation = {0.5f, 0.5f, 0.0f};
             smoothVase.transform.scale = {3.0f, 1.5f, 3.0f};
+            smoothVase.material->setRoughness(0.8f);
+            smoothVase.material->setMetallic(0.7f);
             gameObjects.emplace(smoothVase.getId(), std::move(smoothVase));
 
             // Creates the floor object
@@ -207,6 +211,8 @@ namespace knoxic {
             vase.model = knoxicModel;
             vase.transform.translation = {10.0f, 0.5f, 0.0f};
             vase.transform.scale = {3.0f, 1.5f, 3.0f};
+            vase.material->setRoughness(0.8f);
+            vase.material->setMetallic(0.7f);
             gameObjects.emplace(vase.getId(), std::move(vase));
             
             // Creates the floor object
@@ -249,7 +255,7 @@ namespace knoxic {
             floor3.transform.scale = {3.0f, 1.0f, 3.0f};
             floor3.material->loadAlbedoTexture("res/textures/woodPanels.jpg");
             floor3.material->setRoughness(0.5f);
-            floor3.material->setMetallic(0.0f);
+            floor3.material->setMetallic(0.3f);
             gameObjects.emplace(floor3.getId(), std::move(floor3));
 
             // Creates the wall object
@@ -261,8 +267,8 @@ namespace knoxic {
             wall.transform.rotation = {glm::radians(180.0f), glm::radians(90.0f), glm::radians(90.0f)};
             wall.material->loadAlbedoTexture("res/textures/stoneSlate/castle_wall_slates_diff_4k.jpg");
             wall.material->loadNormalTexture("res/textures/stoneSlate/castle_wall_slates_nor_dx_4k.jpg");
-            wall.material->setRoughness(0.5f);
-            wall.material->setMetallic(0.0f);
+            wall.material->setRoughness(0.002f);
+            wall.material->setMetallic(3.0f);
             gameObjects.emplace(wall.getId(), std::move(wall));
 
             // Creates the wall2 object
@@ -274,12 +280,12 @@ namespace knoxic {
             wall2.transform.rotation = {0.0f, 0.0f, glm::radians(90.0f)};
             wall2.material->loadAlbedoTexture("res/textures/stoneSlate/castle_wall_slates_diff_4k.jpg");
             wall2.material->loadNormalTexture("res/textures/stoneSlate/castle_wall_slates_nor_dx_4k.jpg");
-            wall2.material->setRoughness(0.5f);
-            wall2.material->setMetallic(0.0f);
+            wall2.material->setRoughness(0.002f);
+            wall2.material->setMetallic(3.0f);
             gameObjects.emplace(wall2.getId(), std::move(wall2));
 
             // Creates a point light
-            auto pointLight2 = KnoxicGameObject::makePointLight(knoxicDevice, 0.05f);
+            auto pointLight2 = KnoxicGameObject::makePointLight(knoxicDevice, 0.08f);
             pointLight2.color = glm::vec3{1.0f, 1.0f, 1.0f};
             pointLight2.transform.translation = glm::vec3{-10.0f, -0.5f, -2.0f};
             gameObjects.emplace(pointLight2.getId(), std::move(pointLight2));

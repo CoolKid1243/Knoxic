@@ -96,12 +96,11 @@ namespace knoxic {
                 else if (obj.transform.translation.x > 7.0f && obj.transform.translation.x < 13.0f) {
                     obj.transform.translation.x = 10.0f + sin(time * 1.0f) * 2.0f;
                 }
-                // Scene 3: half-circle pendulum oscillation 
+                // Scene 3: pendulum oscillation 
                 else if (obj.transform.translation.x > -13.0f && obj.transform.translation.x < -7.0f) {
                     // Create smooth pendulum motion using sin wave
-                    float pendulumAngle = sin(time * 0.6f) * (glm::pi<float>() / 2.0f); // Half circle (90 degrees each way)
+                    float pendulumAngle = sin(time * 0.6f) * (glm::pi<float>() / 2.0f);
                     
-                    // Calculate position in half-circle around helmet center
                     glm::vec3 helmetCenter = glm::vec3(-10.0f, 0.5f, 0.0f);
                     float radius = 2.0f; // Distance from helmet
                     
