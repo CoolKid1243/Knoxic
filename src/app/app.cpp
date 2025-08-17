@@ -256,8 +256,8 @@ namespace knoxic {
             knoxicModel = KnoxicModel::createModelFromFile(knoxicDevice, "res/models/quad.obj");
             auto wall = KnoxicGameObject::createGameObject(knoxicDevice);
             wall.model = knoxicModel;
-            wall.transform.translation = {-10.0f, -1.0f, 3.0f};
-            wall.transform.scale = {1.5f, 1.0f, 3.0f};
+            wall.transform.translation = {-10.0f, -2.5f, 3.0f};
+            wall.transform.scale = {3.0f, 1.0f, 3.0f};
             wall.transform.rotation = {glm::radians(180.0f), glm::radians(90.0f), glm::radians(90.0f)};
             wall.material->loadAlbedoTexture("res/textures/stoneSlate/castle_wall_slates_diff_4k.jpg");
             wall.material->loadNormalTexture("res/textures/stoneSlate/castle_wall_slates_nor_dx_4k.jpg");
@@ -269,8 +269,8 @@ namespace knoxic {
             knoxicModel = KnoxicModel::createModelFromFile(knoxicDevice, "res/models/quad.obj");
             auto wall2 = KnoxicGameObject::createGameObject(knoxicDevice);
             wall2.model = knoxicModel;
-            wall2.transform.translation = {-13.0f, -1.0f, 0.0f};
-            wall2.transform.scale = {1.5f, 1.0f, 3.0f};
+            wall2.transform.translation = {-13.0f, -2.5f, 0.0f};
+            wall2.transform.scale = {3.0f, 1.0f, 3.0f};
             wall2.transform.rotation = {0.0f, 0.0f, glm::radians(90.0f)};
             wall2.material->loadAlbedoTexture("res/textures/stoneSlate/castle_wall_slates_diff_4k.jpg");
             wall2.material->loadNormalTexture("res/textures/stoneSlate/castle_wall_slates_nor_dx_4k.jpg");

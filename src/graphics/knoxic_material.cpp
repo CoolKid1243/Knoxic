@@ -154,7 +154,7 @@ namespace knoxic {
             createTextureImageView(normalTextureImage, normalTextureImageView);
             createTextureSampler(normalTextureSampler);
             hasNormalTexture = true;
-            std::cout << filepath << std::endl;
+            // std::cout << filepath << std::endl; // print file path
         } catch (const std::exception& e) {
             std::cerr << "Failed to load normal texture: " << e.what() << std::endl;
             hasNormalTexture = false;
@@ -167,7 +167,7 @@ namespace knoxic {
             createTextureImageView(roughnessTextureImage, roughnessTextureImageView);
             createTextureSampler(roughnessTextureSampler);
             hasRoughnessTexture = true;
-            std::cout << filepath << std::endl;
+            // std::cout << filepath << std::endl; // print file path
         } catch (const std::exception& e) {
             std::cerr << "Failed to load roughness texture: " << e.what() << std::endl;
             hasRoughnessTexture = false;
@@ -180,7 +180,7 @@ namespace knoxic {
             createTextureImageView(metallicTextureImage, metallicTextureImageView);
             createTextureSampler(metallicTextureSampler);
             hasMetallicTexture = true;
-            std::cout << filepath << std::endl;
+            // std::cout << filepath << std::endl; // print file path
         } catch (const std::exception& e) {
             std::cerr << "Failed to load metallic texture: " << e.what() << std::endl;
             hasMetallicTexture = false;

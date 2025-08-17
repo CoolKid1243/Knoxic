@@ -61,20 +61,22 @@ void main() {
     // Sample albedo texture and combine with material color
     vec3 materialColor = push.albedo * texture(albedoTexture, fragUv).rgb;
     
-    // Sample normal map and convert from [0,1] to [-1,1] range
+    // Sample normal map
     vec3 normalMap = texture(normalTexture, fragUv).rgb;
-    normalMap = normalize(normalMap * 2.0 - 1.0);
     
-    // Calculate TBN matrix
+    // Start with the vertex normal
     vec3 N = normalize(fragNormalWorld);
-    mat3 TBN = calculateTBN(N, fragPosWorld, fragUv);
+    vec3 surfaceNormal = N;
     
-    // Transform normal from tangent space to world space
-    vec3 surfaceNormal = normalize(TBN * normalMap);
-    
-    vec3 defaultNormal = vec3(0.5, 0.5, 1.0);
-    if (length(texture(normalTexture, fragUv).rgb - defaultNormal) < 0.1) {
-        surfaceNormal = N;
+    // Check if this is a real normal map
+    vec3 whiteTexel = vec3(1.0, 1.0, 1.0);
+    if (length(normalMap - whiteTexel) > 0.01) {
+        // Convert from [0,1] to [-1,1] range
+        normalMap = normalize(normalMap * 2.0 - 1.0);
+        
+        // Calculate TBN matrix and transform normal from tangent space to world space
+        mat3 TBN = calculateTBN(N, fragPosWorld, fragUv);
+        surfaceNormal = normalize(TBN * normalMap);
     }
 
     vec3 diffuseLight = ubo.ambientLightColor.xyz * ubo.ambientLightColor.w;
