@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../core/knoxic_device.hpp"
-#include "../core/knoxic_descriptors.hpp"
+#include "../../core/vulkan/knoxic_vk_device.hpp"
+#include "../../core/vulkan/knoxic_vk_descriptors.hpp"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE

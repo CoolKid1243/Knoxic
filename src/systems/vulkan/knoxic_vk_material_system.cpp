@@ -1,4 +1,4 @@
-#include "material_system.hpp"
+#include "knoxic_vk_material_system.hpp"
 
 namespace knoxic {
 

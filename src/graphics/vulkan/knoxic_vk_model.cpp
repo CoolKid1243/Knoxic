@@ -1,7 +1,7 @@
-#include "knoxic_model.hpp"
-#include "../core/knoxic_buffer.hpp"
-#include "../core/knoxic_device.hpp"
-#include "../core/knoxic_utils.hpp"
+#include "knoxic_vk_model.hpp"
+#include "../../core/vulkan/knoxic_vk_buffer.hpp"
+#include "../../core/vulkan/knoxic_vk_device.hpp"
+#include "../../core/knoxic_utils.hpp"
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "knoxic_device.hpp"
+#include "knoxic_vk_device.hpp"
 
 #include <memory>
 #include <unordered_map>

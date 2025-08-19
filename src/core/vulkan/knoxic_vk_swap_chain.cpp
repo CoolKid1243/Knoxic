@@ -1,4 +1,4 @@
-#include "knoxic_swap_chain.hpp"
+#include "knoxic_vk_swap_chain.hpp"
 
 #include <array>
 #include <cstdlib>

@@ -1,4 +1,4 @@
-#include "knoxic_material.hpp"
+#include "knoxic_vk_material.hpp"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>

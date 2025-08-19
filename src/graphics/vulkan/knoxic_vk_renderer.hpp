@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../core/knoxic_window.hpp"
-#include "../core/knoxic_device.hpp"
-#include "../core/knoxic_swap_chain.hpp"
+#include "../../core/knoxic_window.hpp"
+#include "../../core/vulkan/knoxic_vk_device.hpp"
+#include "../../core/vulkan/knoxic_vk_swap_chain.hpp"
 
 #include <memory>
 #include <vector>

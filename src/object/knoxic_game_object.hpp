@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../graphics/knoxic_model.hpp"
-#include "../graphics/knoxic_material.hpp"
+#include "../graphics/vulkan/knoxic_vk_model.hpp"
+#include "../graphics/vulkan/knoxic_vk_material.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <memory>

@@ -1,6 +1,6 @@
-#include "point_light_system.hpp"
-#include "../core/knoxic_device.hpp"
-#include "../graphics/knoxic_frame_info.hpp"
+#include "knoxic_vk_point_light_system.hpp"
+#include "../../core/vulkan/knoxic_vk_device.hpp"
+#include "../../graphics/knoxic_frame_info.hpp"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -60,8 +60,8 @@ namespace knoxic {
         pipelineConfig.pipelineLayout = pipelineLayout;
         knoxicPipeline = std::make_unique<KnoxicPipeline>(
             knoxicDevice,
-            "shaders/point_light.vert.spv",
-            "shaders/point_light.frag.spv",
+            "shaders/vk_point_light.vert.spv",
+            "shaders/vk_point_light.frag.spv",
             pipelineConfig
         );
     }

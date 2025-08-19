@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../core/knoxic_device.hpp"
+#include "../../core/vulkan/knoxic_vk_device.hpp"
 
 #include <string>
 #include <vector>

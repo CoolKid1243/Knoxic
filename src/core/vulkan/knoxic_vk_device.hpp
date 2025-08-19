@@ -1,6 +1,6 @@
 #pragma once
 
-#include "knoxic_window.hpp"
+#include "../knoxic_window.hpp"
 
 #include <vector>
 

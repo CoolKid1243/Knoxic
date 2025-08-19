@@ -1,6 +1,6 @@
 #pragma once
 
-#include "knoxic_device.hpp"
+#include "knoxic_vk_device.hpp"
 
 #include <vulkan/vulkan.h>
 

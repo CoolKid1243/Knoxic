@@ -1,16 +1,16 @@
 #include "app.hpp"
 #include "../graphics/knoxic_frame_info.hpp"
 #include "../object/knoxic_game_object.hpp"
-#include "../graphics/knoxic_model.hpp"
-#include "../graphics/knoxic_material.hpp"
-#include "../core/knoxic_swap_chain.hpp"
+#include "../graphics/vulkan/knoxic_vk_model.hpp"
+#include "../graphics/vulkan/knoxic_vk_material.hpp"
+#include "../core/vulkan/knoxic_vk_swap_chain.hpp"
 #include "../camera/knoxic_camera.hpp"
 #include "../input/keybord_movement_controller.hpp"
 #include "../input/mouse_movement_controller.hpp"
-#include "../core/knoxic_buffer.hpp"
-#include "../systems/render_system.hpp"
-#include "../systems/point_light_system.hpp"
-#include "../systems/material_system.hpp"
+#include "../core/vulkan/knoxic_vk_buffer.hpp"
+#include "../systems/vulkan/knoxic_vk_render_system.hpp"
+#include "../systems/vulkan/knoxic_vk_point_light_system.hpp"
+#include "../systems/vulkan/knoxic_vk_material_system.hpp"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../core/knoxic_device.hpp"
-#include "../core/knoxic_descriptors.hpp"
-#include "../graphics/knoxic_frame_info.hpp"
+#include "../../core/vulkan/knoxic_vk_device.hpp"
+#include "../../core/vulkan/knoxic_vk_descriptors.hpp"
+#include "../../graphics/knoxic_frame_info.hpp"
 
 #include <memory>
 

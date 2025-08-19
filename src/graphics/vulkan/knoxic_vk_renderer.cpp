@@ -1,6 +1,6 @@
-#include "../graphics/knoxic_renderer.hpp"
-#include "../core/knoxic_device.hpp"
-#include "../core/knoxic_swap_chain.hpp"
+#include "../../graphics/vulkan/knoxic_vk_renderer.hpp"
+#include "../../core/vulkan/knoxic_vk_device.hpp"
+#include "../../core/vulkan/knoxic_vk_swap_chain.hpp"
 
 #include <array>
 #include <cassert>

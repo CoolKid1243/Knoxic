@@ -1,5 +1,5 @@
-#include "../graphics/knoxic_pipeline.hpp"
-#include "knoxic_model.hpp"
+#include "knoxic_vk_pipeline.hpp"
+#include "knoxic_vk_model.hpp"
 
 #include <cassert>
 #include <cstdint>

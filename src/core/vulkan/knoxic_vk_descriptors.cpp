@@ -1,4 +1,4 @@
-#include "knoxic_descriptors.hpp"
+#include "knoxic_vk_descriptors.hpp"
 
 #include <cassert>
 #include <stdexcept>

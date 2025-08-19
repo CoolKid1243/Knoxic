@@ -1,4 +1,4 @@
-#include "knoxic_device.hpp"
+#include "knoxic_vk_device.hpp"
 
 #include <cstring>
 #include <iostream>

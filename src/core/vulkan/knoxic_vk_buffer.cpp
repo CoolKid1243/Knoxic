@@ -1,4 +1,4 @@
-#include "knoxic_buffer.hpp"
+#include "knoxic_vk_buffer.hpp"
  
 #include <cassert>
 #include <cstring>
