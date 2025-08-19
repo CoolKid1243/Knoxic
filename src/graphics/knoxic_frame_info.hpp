@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../camera/knoxic_camera.hpp"
-#include "../object/knoxic_game_object.hpp"
+#include "../core/knoxic_game_object.hpp"
 
 #include <vulkan/vulkan.h>
 

@@ -1,6 +1,6 @@
 #include "app.hpp"
 #include "../graphics/knoxic_frame_info.hpp"
-#include "../object/knoxic_game_object.hpp"
+#include "../core/knoxic_game_object.hpp"
 #include "../graphics/vulkan/knoxic_vk_model.hpp"
 #include "../graphics/vulkan/knoxic_vk_material.hpp"
 #include "../core/vulkan/knoxic_vk_swap_chain.hpp"
