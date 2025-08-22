@@ -4,7 +4,7 @@
  
 namespace knoxic {
  
-class KnoxicBuffer {
+    class KnoxicBuffer {
     public:
         KnoxicBuffer(KnoxicDevice &device, VkDeviceSize instanceSize, uint32_t instanceCount, 
             VkBufferUsageFlags usageFlags, VkMemoryPropertyFlags memoryPropertyFlags, VkDeviceSize minOffsetAlignment = 1);

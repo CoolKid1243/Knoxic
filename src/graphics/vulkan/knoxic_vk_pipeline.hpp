@@ -29,37 +29,37 @@ namespace knoxic {
     };
 
     class KnoxicPipeline {
-        public:
-            KnoxicPipeline(
-                KnoxicDevice &device, 
-                const std::string &vertexFilePath, 
-                const std::string &fragmentFilePath, 
-                const PipelineConfigInfo &configInfo
-            );
-            ~KnoxicPipeline();
+    public:
+        KnoxicPipeline(
+            KnoxicDevice &device, 
+            const std::string &vertexFilePath, 
+            const std::string &fragmentFilePath, 
+            const PipelineConfigInfo &configInfo
+        );
+        ~KnoxicPipeline();
 
-            KnoxicPipeline(const KnoxicPipeline&) = delete;
-            KnoxicPipeline &operator=(const KnoxicPipeline&) = delete;
+        KnoxicPipeline(const KnoxicPipeline&) = delete;
+        KnoxicPipeline &operator=(const KnoxicPipeline&) = delete;
 
-            void bind(VkCommandBuffer commandBuffer);
+        void bind(VkCommandBuffer commandBuffer);
             
-            static void defaultPipelineConfigInfo(PipelineConfigInfo &configInfo);
-            static void enableAlphaBlending(PipelineConfigInfo &configInfo);
+        static void defaultPipelineConfigInfo(PipelineConfigInfo &configInfo);
+        static void enableAlphaBlending(PipelineConfigInfo &configInfo);
 
-        private:
-            static std::vector<char> readFile(const std::string &filepath);
+    private:
+        static std::vector<char> readFile(const std::string &filepath);
 
-            void createGraphicsPipeline(
-                const std::string &vertexFilePath, 
-                const std::string &fragmentFilePath, 
-                const PipelineConfigInfo &configInfo
-            );
+        void createGraphicsPipeline(
+            const std::string &vertexFilePath, 
+            const std::string &fragmentFilePath, 
+            const PipelineConfigInfo &configInfo
+        );
 
-            void createShaderModule(const std::vector<char> &code, VkShaderModule *shaderModule);
+        void createShaderModule(const std::vector<char> &code, VkShaderModule *shaderModule);
 
-            KnoxicDevice &knoxicDevice;
-            VkPipeline graphicsPipeline;
-            VkShaderModule vertShaderModule;
-            VkShaderModule fragShaderModule;
+        KnoxicDevice &knoxicDevice;
+        VkPipeline graphicsPipeline;
+        VkShaderModule vertShaderModule;
+        VkShaderModule fragShaderModule;
     };
 }

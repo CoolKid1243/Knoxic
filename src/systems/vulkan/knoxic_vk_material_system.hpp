@@ -9,18 +9,18 @@
 namespace knoxic {
 
     class MaterialSystem {
-        public:
-            MaterialSystem(KnoxicDevice &device);
-            ~MaterialSystem();
+    public:
+        MaterialSystem(KnoxicDevice &device);
+        ~MaterialSystem();
 
-            MaterialSystem(const MaterialSystem &) = delete;
-            MaterialSystem &operator=(const MaterialSystem &) = delete;
+        MaterialSystem(const MaterialSystem &) = delete;
+        MaterialSystem &operator=(const MaterialSystem &) = delete;
 
-            std::unique_ptr<KnoxicDescriptorSetLayout> createMaterialSetLayout();
+        std::unique_ptr<KnoxicDescriptorSetLayout> createMaterialSetLayout();
             
-            void updateMaterials(FrameInfo &frameInfo, KnoxicDescriptorSetLayout& materialSetLayout, KnoxicDescriptorPool& materialPool);
+        void updateMaterials(FrameInfo &frameInfo, KnoxicDescriptorSetLayout& materialSetLayout, KnoxicDescriptorPool& materialPool);
 
-        private:
-            KnoxicDevice &knoxicDevice;
+    private:
+        KnoxicDevice &knoxicDevice;
     };
 }

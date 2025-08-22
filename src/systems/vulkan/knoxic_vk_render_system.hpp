@@ -9,22 +9,22 @@
 namespace knoxic {
 
     class RenderSystem {
-        public:
-            RenderSystem(KnoxicDevice &device, VkRenderPass renderPass, 
-                VkDescriptorSetLayout globalSetLayout, VkDescriptorSetLayout materialSetLayout);
-            ~RenderSystem();
+    public:
+        RenderSystem(KnoxicDevice &device, VkRenderPass renderPass, 
+            VkDescriptorSetLayout globalSetLayout, VkDescriptorSetLayout materialSetLayout);
+        ~RenderSystem();
 
-            RenderSystem(const RenderSystem &) = delete;
-            RenderSystem &operator=(const RenderSystem &) = delete;
+        RenderSystem(const RenderSystem &) = delete;
+        RenderSystem &operator=(const RenderSystem &) = delete;
 
-            void renderGameObjects(FrameInfo &frameInfo);
+        void renderGameObjects(FrameInfo &frameInfo);
 
-        private:
-            void createPipelineLayout(VkDescriptorSetLayout globalSetLayout, VkDescriptorSetLayout materialSetLayout);
-            void createPipeline(VkRenderPass renderPass);
+    private:
+        void createPipelineLayout(VkDescriptorSetLayout globalSetLayout, VkDescriptorSetLayout materialSetLayout);
+        void createPipeline(VkRenderPass renderPass);
 
-            KnoxicDevice &knoxicDevice;
-            std::unique_ptr<KnoxicPipeline> knoxicPipeline;
-            VkPipelineLayout pipelineLayout;
+        KnoxicDevice &knoxicDevice;
+        std::unique_ptr<KnoxicPipeline> knoxicPipeline;
+        VkPipelineLayout pipelineLayout;
     };
 }

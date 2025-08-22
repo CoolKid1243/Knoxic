@@ -23,75 +23,75 @@ namespace knoxic {
     };
 
     class KnoxicMaterial {
-        public:
-            KnoxicMaterial(KnoxicDevice& device);
-            ~KnoxicMaterial();
+    public:
+        KnoxicMaterial(KnoxicDevice& device);
+        ~KnoxicMaterial();
 
-            KnoxicMaterial(const KnoxicMaterial&) = delete;
-            KnoxicMaterial& operator=(const KnoxicMaterial&) = delete;
+        KnoxicMaterial(const KnoxicMaterial&) = delete;
+        KnoxicMaterial& operator=(const KnoxicMaterial&) = delete;
 
-            void setAlbedo(const glm::vec3& color) { properties.albedo = color; }
-            void setMetallic(float metallic) { properties.metallic = metallic; }
-            void setRoughness(float roughness) { properties.roughness = roughness; }
-            void setAO(float ao) { properties.ao = ao; }
-            void setTextureOffset(const glm::vec2& offset) { properties.textureOffset = offset; }
-            void setTextureScale(const glm::vec2& scale) { properties.textureScale = scale; }
+        void setAlbedo(const glm::vec3& color) { properties.albedo = color; }
+        void setMetallic(float metallic) { properties.metallic = metallic; }
+        void setRoughness(float roughness) { properties.roughness = roughness; }
+        void setAO(float ao) { properties.ao = ao; }
+        void setTextureOffset(const glm::vec2& offset) { properties.textureOffset = offset; }
+        void setTextureScale(const glm::vec2& scale) { properties.textureScale = scale; }
 
-            void loadAlbedoTexture(const std::string& filepath);
-            void loadNormalTexture(const std::string& filepath);
-            void loadRoughnessMap(const std::string& filepath);
-            void loadMetallicMap(const std::string& filepath);
+        void loadAlbedoTexture(const std::string& filepath);
+        void loadNormalTexture(const std::string& filepath);
+        void loadRoughnessMap(const std::string& filepath);
+        void loadMetallicMap(const std::string& filepath);
 
-            // Getters
-            const MaterialProperties& getProperties() const { return properties; }
-            VkDescriptorSet getDescriptorSet() const { return descriptorSet; }
-            bool hasTextures() const { return hasAlbedoTexture || hasNormalTexture || hasRoughnessTexture || hasMetallicTexture; }
+        // Getters
+        const MaterialProperties& getProperties() const { return properties; }
+        VkDescriptorSet getDescriptorSet() const { return descriptorSet; }
+        bool hasTextures() const { return hasAlbedoTexture || hasNormalTexture || hasRoughnessTexture || hasMetallicTexture; }
 
-            // Update descriptor set
-            void updateDescriptorSet(KnoxicDescriptorSetLayout& setLayout, KnoxicDescriptorPool& pool);
+        // Update descriptor set
+        void updateDescriptorSet(KnoxicDescriptorSetLayout& setLayout, KnoxicDescriptorPool& pool);
 
-        private:
-            void createDefaultTexture();
-            void createTextureImage(const std::string& filepath, VkImage& image, VkDeviceMemory& imageMemory);
-            void createTextureImageView(VkImage image, VkImageView& imageView);
-            void createTextureSampler(VkSampler& sampler);
+    private:
+        void createDefaultTexture();
+        void createTextureImage(const std::string& filepath, VkImage& image, VkDeviceMemory& imageMemory);
+        void createTextureImageView(VkImage image, VkImageView& imageView);
+        void createTextureSampler(VkSampler& sampler);
 
-            KnoxicDevice& knoxicDevice;
-            MaterialProperties properties;
+        KnoxicDevice& knoxicDevice;
+        MaterialProperties properties;
 
-            // Texture resources
-            VkImage albedoTextureImage = VK_NULL_HANDLE;
-            VkDeviceMemory albedoTextureImageMemory = VK_NULL_HANDLE;
-            VkImageView albedoTextureImageView = VK_NULL_HANDLE;
-            VkSampler albedoTextureSampler = VK_NULL_HANDLE;
+        // Texture resources
+        VkImage albedoTextureImage = VK_NULL_HANDLE;
+        VkDeviceMemory albedoTextureImageMemory = VK_NULL_HANDLE;
+        VkImageView albedoTextureImageView = VK_NULL_HANDLE;
+        VkSampler albedoTextureSampler = VK_NULL_HANDLE;
 
-            VkImage normalTextureImage = VK_NULL_HANDLE;
-            VkDeviceMemory normalTextureImageMemory = VK_NULL_HANDLE;
-            VkImageView normalTextureImageView = VK_NULL_HANDLE;
-            VkSampler normalTextureSampler = VK_NULL_HANDLE;
+        VkImage normalTextureImage = VK_NULL_HANDLE;
+        VkDeviceMemory normalTextureImageMemory = VK_NULL_HANDLE;
+        VkImageView normalTextureImageView = VK_NULL_HANDLE;
+        VkSampler normalTextureSampler = VK_NULL_HANDLE;
 
-            VkImage roughnessTextureImage = VK_NULL_HANDLE;
-            VkDeviceMemory roughnessTextureImageMemory = VK_NULL_HANDLE;
-            VkImageView roughnessTextureImageView = VK_NULL_HANDLE;
-            VkSampler roughnessTextureSampler = VK_NULL_HANDLE;
+        VkImage roughnessTextureImage = VK_NULL_HANDLE;
+        VkDeviceMemory roughnessTextureImageMemory = VK_NULL_HANDLE;
+        VkImageView roughnessTextureImageView = VK_NULL_HANDLE;
+        VkSampler roughnessTextureSampler = VK_NULL_HANDLE;
 
-            VkImage metallicTextureImage = VK_NULL_HANDLE;
-            VkDeviceMemory metallicTextureImageMemory = VK_NULL_HANDLE;
-            VkImageView metallicTextureImageView = VK_NULL_HANDLE;
-            VkSampler metallicTextureSampler = VK_NULL_HANDLE;
+        VkImage metallicTextureImage = VK_NULL_HANDLE;
+        VkDeviceMemory metallicTextureImageMemory = VK_NULL_HANDLE;
+        VkImageView metallicTextureImageView = VK_NULL_HANDLE;
+        VkSampler metallicTextureSampler = VK_NULL_HANDLE;
 
-            // Default white texture for when no texture is loaded
-            VkImage defaultTextureImage = VK_NULL_HANDLE;
-            VkDeviceMemory defaultTextureImageMemory = VK_NULL_HANDLE;
-            VkImageView defaultTextureImageView = VK_NULL_HANDLE;
-            VkSampler defaultTextureSampler = VK_NULL_HANDLE;
+        // Default white texture for when no texture is loaded
+        VkImage defaultTextureImage = VK_NULL_HANDLE;
+        VkDeviceMemory defaultTextureImageMemory = VK_NULL_HANDLE;
+        VkImageView defaultTextureImageView = VK_NULL_HANDLE;
+        VkSampler defaultTextureSampler = VK_NULL_HANDLE;
 
-            VkDescriptorSet descriptorSet = VK_NULL_HANDLE;
+        VkDescriptorSet descriptorSet = VK_NULL_HANDLE;
 
-            bool hasAlbedoTexture = false;
-            bool hasNormalTexture = false;
-            bool hasRoughnessTexture = false;
-            bool hasMetallicTexture = false;
+        bool hasAlbedoTexture = false;
+        bool hasNormalTexture = false;
+        bool hasRoughnessTexture = false;
+        bool hasMetallicTexture = false;
     };
 
     struct MaterialComponent {

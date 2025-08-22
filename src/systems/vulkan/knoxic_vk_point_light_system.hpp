@@ -9,22 +9,22 @@
 namespace knoxic {
 
     class PointLightSystem {
-        public:
-            PointLightSystem(KnoxicDevice &device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout);
-            ~PointLightSystem();
+    public:
+        PointLightSystem(KnoxicDevice &device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout);
+        ~PointLightSystem();
 
-            PointLightSystem(const PointLightSystem &) = delete;
-            PointLightSystem &operator=(const PointLightSystem &) = delete;
+        PointLightSystem(const PointLightSystem &) = delete;
+        PointLightSystem &operator=(const PointLightSystem &) = delete;
 
-            void update(FrameInfo &frameInfo, GlobalUbo &ubo);
-            void render(FrameInfo &frameInfo);
+        void update(FrameInfo &frameInfo, GlobalUbo &ubo);
+        void render(FrameInfo &frameInfo);
 
-        private:
-            void createPipelineLayout(VkDescriptorSetLayout globalSetLayout);
-            void createPipeline(VkRenderPass renderPass);
+    private:
+        void createPipelineLayout(VkDescriptorSetLayout globalSetLayout);
+        void createPipeline(VkRenderPass renderPass);
 
-            KnoxicDevice &knoxicDevice;
-            std::unique_ptr<KnoxicPipeline> knoxicPipeline;
-            VkPipelineLayout pipelineLayout;
+        KnoxicDevice &knoxicDevice;
+        std::unique_ptr<KnoxicPipeline> knoxicPipeline;
+        VkPipelineLayout pipelineLayout;
     };
 }

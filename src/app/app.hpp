@@ -9,28 +9,28 @@
 namespace knoxic {
 
     class App {
-        public:
-            static constexpr int WIDTH = 1152;
-            static constexpr int HEIGHT = 758;
+    public:
+        static constexpr int WIDTH = 1152;
+        static constexpr int HEIGHT = 758;
 
-            App();
-            ~App();
+        App();
+         ~App();
 
-            App(const App &) = delete;
-            App &operator=(const App &) = delete;
+        App(const App &) = delete;
+        App &operator=(const App &) = delete;
 
-            void run();
+        void run();
 
-        private:
-            void loadGameObjects();
+    private:
+        void loadGameObjects();
 
-            KnoxicWindow knoxicWindow{WIDTH, HEIGHT, "Knoxic"};
-            KnoxicDevice knoxicDevice{knoxicWindow};
-            KnoxicRenderer knoxicRenderer{knoxicWindow, knoxicDevice};
+        KnoxicWindow knoxicWindow{WIDTH, HEIGHT, "Knoxic"};
+        KnoxicDevice knoxicDevice{knoxicWindow};
+        KnoxicRenderer knoxicRenderer{knoxicWindow, knoxicDevice};
 
-            // Order of declarations matters
-            std::unique_ptr<KnoxicDescriptorPool> globalPool{};
-            std::unique_ptr<KnoxicDescriptorPool> materialPool{};
-            KnoxicGameObject::Map gameObjects;
+        // Order of declarations matters
+        std::unique_ptr<KnoxicDescriptorPool> globalPool{};
+        std::unique_ptr<KnoxicDescriptorPool> materialPool{};
+        KnoxicGameObject::Map gameObjects;
     };
 }
