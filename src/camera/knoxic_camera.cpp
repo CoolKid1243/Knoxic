@@ -5,8 +5,7 @@
 
 namespace knoxic {
 
-    void KnoxicCamera::setOrthographicProjection(
-        float left, float right, float top, float bottom, float near, float far) {
+    void KnoxicCamera::setOrthographicProjection(float left, float right, float top, float bottom, float near, float far) {
         projectionMatrix = glm::mat4{1.0f};
         projectionMatrix[0][0] = 2.0f / (right - left);
         projectionMatrix[1][1] = 2.0f / (bottom - top);

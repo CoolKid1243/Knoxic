@@ -105,7 +105,7 @@ namespace knoxic {
             camera.setViewYXZ(viewerObject.transform.translation, viewerObject.transform.rotation);
 
             float aspect = knoxicRenderer.getAspectRatio();
-            camera.setPerspectiveProjection(glm::radians(50.0f), aspect, 0.01f, 100.0f);
+            camera.setPerspectiveProjection(glm::radians(60.0f), aspect, 0.01f, 100.0f);
             
             if (auto commandBuffer = knoxicRenderer.beginFrame()) {
                 int frameIndex = knoxicRenderer.getFrameIndex();
@@ -247,7 +247,7 @@ namespace knoxic {
             medievalHelmet.material->setMetallic(2.0f);
             gameObjects.emplace(medievalHelmet.getId(), std::move(medievalHelmet));
 
-            // Creates the floor object
+            // Creates the fl oor object
             knoxicModel = KnoxicModel::createModelFromFile(knoxicDevice, "res/models/quad.obj");
             auto floor3 = KnoxicGameObject::createGameObject(knoxicDevice);
             floor3.model = knoxicModel;
