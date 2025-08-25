@@ -42,6 +42,7 @@ namespace knoxic {
         VkQueue graphicsQueue() { return graphicsQueue_; }
         VkQueue presentQueue() { return presentQueue_; }
         VkPhysicalDevice getPhysicalDevice() { return physicalDevice; }
+        VkInstance getInstance() { return instance; }
 
         SwapChainSupportDetails getSwapChainSupport() { return querySwapChainSupport(physicalDevice); }
         uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);

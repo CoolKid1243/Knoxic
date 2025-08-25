@@ -34,6 +34,13 @@ namespace knoxic {
             .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 4000)
             .build();
 
+        uiSystem = std::make_unique<KnoxicUISystem>(
+            knoxicWindow, 
+            knoxicDevice, 
+            knoxicRenderer.getSwapChainRenderPass(),
+            2  // image count
+        );
+
         loadGameObjects(); 
     }
 
@@ -100,8 +107,41 @@ namespace knoxic {
             float frameTime = std::chrono::duration<float, std::chrono::seconds::period>(newTime - currentTime).count();
             currentTime = newTime;
 
-            cameraControllerKeybord.moveInPlaneXZ(knoxicWindow.getGLFWwindow(), frameTime, viewerObject);
-            cameraControllerMouse.updateLook(knoxicWindow.getGLFWwindow(), frameTime, viewerObject);
+            // Handle editor mode toggle
+            static bool tabPressedLastFrame = false;
+            if (glfwGetKey(knoxicWindow.getGLFWwindow(), GLFW_KEY_TAB) == GLFW_PRESS) {
+                if (!tabPressedLastFrame) {
+                    bool isEditorMode = uiSystem->isEditorMode();
+                    uiSystem->setEditorMode(!isEditorMode);
+                    
+                    // Toggle cursor mode
+                    if (!isEditorMode) {
+                        // Entering editor mode - show cursor
+                        glfwSetInputMode(knoxicWindow.getGLFWwindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+                        cameraControllerMouse.mouseHidden = false;
+                    } else {
+                        // Exiting editor mode - hide cursor
+                        glfwSetInputMode(knoxicWindow.getGLFWwindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+                        cameraControllerMouse.mouseHidden = true;
+                    }
+                    cameraControllerMouse.resetCursor(knoxicWindow.getGLFWwindow());
+                }
+                tabPressedLastFrame = true;
+            } else {
+                tabPressedLastFrame = false;
+            }
+
+            // Only handle camera movement when not in editor mode
+            if (!uiSystem->isEditorMode()) {
+                cameraControllerKeybord.moveInPlaneXZ(knoxicWindow.getGLFWwindow(), frameTime, viewerObject);
+                cameraControllerMouse.updateLook(knoxicWindow.getGLFWwindow(), frameTime, viewerObject);
+            } else {
+                // Handle ESC key for editor mode
+                if (glfwGetKey(knoxicWindow.getGLFWwindow(), GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+                    glfwSetWindowShouldClose(knoxicWindow.getGLFWwindow(), true);
+                }
+            }
+
             camera.setViewYXZ(viewerObject.transform.translation, viewerObject.transform.rotation);
 
             float aspect = knoxicRenderer.getAspectRatio();
@@ -130,12 +170,37 @@ namespace knoxic {
                 uboBuffers[frameIndex]->writeToBuffer(&ubo);
                 uboBuffers[frameIndex]->flush();
 
+                // Start UI frame
+                uiSystem->newFrame();
+                
+                // Show UI windows if in editor mode
+                if (uiSystem->isEditorMode()) {
+                    uiSystem->showSceneHierarchy(frameInfo);
+                    uiSystem->showInspector(frameInfo);
+                    uiSystem->showPerformanceWindow();
+                    uiSystem->showAssetBrowser();
+                    uiSystem->showConsole();
+                    uiSystem->showDemoWindow();
+                    
+                    // Render custom windows using public getter
+                    for (const auto& pair : uiSystem->getCustomWindows()) {
+                        pair.second(); // Call the window draw function
+                    }
+                }
+
                 // Render
                 knoxicRenderer.beginSwapChainRenderPass(commandBuffer);
                 renderSystem.renderGameObjects(frameInfo);
                 pointLightSystem.render(frameInfo);
+                
+                // Render UI
+                uiSystem->render(commandBuffer);
+                
                 knoxicRenderer.endSwapChainRenderPass(commandBuffer);
                 knoxicRenderer.endFrame();
+                
+                // End UI frame
+                uiSystem->endFrame();
             }
         }
 

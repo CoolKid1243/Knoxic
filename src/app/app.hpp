@@ -5,6 +5,7 @@
 #include "../core/knoxic_game_object.hpp"
 #include "../graphics/vulkan/knoxic_vk_renderer.hpp"
 #include "../core/vulkan/knoxic_vk_descriptors.hpp"
+#include "../systems/knoxic_ui_system.hpp"
 
 namespace knoxic {
 
@@ -31,6 +32,7 @@ namespace knoxic {
         // Order of declarations matters
         std::unique_ptr<KnoxicDescriptorPool> globalPool{};
         std::unique_ptr<KnoxicDescriptorPool> materialPool{};
+        std::unique_ptr<KnoxicUISystem> uiSystem{};
         KnoxicGameObject::Map gameObjects;
     };
 }

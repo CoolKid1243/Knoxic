@@ -18,6 +18,7 @@ endif()
 
 project(${NAME} VERSION 0.23.0)
 
+# Vulkan
 if (DEFINED VULKAN_SDK_PATH)
     set(Vulkan_INCLUDE_DIRS "${VULKAN_SDK_PATH}/Include")
     set(Vulkan_LIBRARIES "${VULKAN_SDK_PATH}/Lib")
@@ -33,6 +34,7 @@ else()
     message(STATUS "Using vulkan lib at: ${Vulkan_LIBRARIES}")
 endif()
 
+# GLFW
 if (DEFINED GLFW_PATH)
     message(STATUS "Using GLFW path specified in .env")
     set(GLFW_INCLUDE_DIRS "${GLFW_PATH}/include")
@@ -54,6 +56,7 @@ else()
     message(STATUS "Using glfw lib at: ${GLFW_LIB}")
 endif()
 
+# Assimp
 if (DEFINED ASSIMP_PATH)
     message(STATUS "Using ASSIMP path specified in .env")
     set(ASSIMP_INCLUDE_DIRS "${ASSIMP_PATH}/include")
@@ -78,17 +81,42 @@ else()
     message(STATUS "Using Assimp lib at: ${ASSIMP_LIBRARIES}")
 endif()
 
+# stb_image
 include_directories(external)
-
 if (NOT STBIMAGE_PATH)
     message(STATUS "STBIMAGE_PATH not specified in .env.cmake, using external/stbimage")
     set(STBIMAGE_PATH external/stbimage)
 endif()
 
+# ImGui setup
+set(IMGUI_PATH ${PROJECT_SOURCE_DIR}/external/imgui)
+set(IMGUI_BACKENDS ${IMGUI_PATH}/backends)
+
+set(IMGUI_SOURCES
+    ${IMGUI_PATH}/imgui.cpp
+    ${IMGUI_PATH}/imgui_draw.cpp
+    ${IMGUI_PATH}/imgui_tables.cpp
+    ${IMGUI_PATH}/imgui_widgets.cpp
+    ${IMGUI_PATH}/imgui_demo.cpp
+    ${IMGUI_BACKENDS}/imgui_impl_glfw.cpp
+    ${IMGUI_BACKENDS}/imgui_impl_vulkan.cpp
+)
+
+add_library(imgui STATIC ${IMGUI_SOURCES})
+
+target_include_directories(imgui PUBLIC
+    ${IMGUI_PATH}
+    ${IMGUI_BACKENDS}
+    ${Vulkan_INCLUDE_DIRS}
+    ${GLFW_INCLUDE_DIRS}
+)
+
+target_link_libraries(imgui PUBLIC glfw ${Vulkan_LIBRARIES})
+
+# Main engine
 file(GLOB_RECURSE SOURCES ${PROJECT_SOURCE_DIR}/src/*.cpp)
 
 add_executable(${PROJECT_NAME} ${SOURCES})
-
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/build")
@@ -119,11 +147,7 @@ if (WIN32)
         ${GLFW_LIB}
     )
 
-    if (DEFINED ASSIMP_PATH)
-        target_link_libraries(${PROJECT_NAME} glfw3 vulkan-1 ${ASSIMP_LIBRARIES})
-    else()
-        target_link_libraries(${PROJECT_NAME} glfw3 vulkan-1 ${ASSIMP_LIBRARIES})
-    endif()
+    target_link_libraries(${PROJECT_NAME} PRIVATE glfw3 vulkan-1 ${ASSIMP_LIBRARIES} imgui)
 
 elseif (UNIX)
     message(STATUS "CREATING BUILD FOR UNIX")
@@ -133,13 +157,10 @@ elseif (UNIX)
         ${STBIMAGE_PATH}
     )
 
-    if (DEFINED ASSIMP_PATH)
-        target_link_libraries(${PROJECT_NAME} glfw ${Vulkan_LIBRARIES} ${ASSIMP_LIBRARIES})
-    else()
-        target_link_libraries(${PROJECT_NAME} glfw ${Vulkan_LIBRARIES} ${ASSIMP_LIBRARIES})
-    endif()
+    target_link_libraries(${PROJECT_NAME} PRIVATE glfw ${Vulkan_LIBRARIES} ${ASSIMP_LIBRARIES} imgui)
 endif()
 
+# GLSL shader compilation
 find_program(GLSL_VALIDATOR glslangValidator HINTS 
     ${Vulkan_GLSLANG_VALIDATOR_EXECUTABLE} 
     /usr/bin 
