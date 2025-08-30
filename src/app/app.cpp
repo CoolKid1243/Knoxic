@@ -247,7 +247,7 @@ namespace knoxic {
             medievalHelmet.material->setMetallic(2.0f);
             gameObjects.emplace(medievalHelmet.getId(), std::move(medievalHelmet));
 
-            // Creates the fl oor object
+            // Creates the floor object
             knoxicModel = KnoxicModel::createModelFromFile(knoxicDevice, "res/models/quad.obj");
             auto floor3 = KnoxicGameObject::createGameObject(knoxicDevice);
             floor3.model = knoxicModel;
