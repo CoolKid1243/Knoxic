@@ -3,6 +3,7 @@
 # files
 .clangd
 shaders/*.spv
+TODO.txt
 
 # folders
 .vscode
