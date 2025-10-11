@@ -145,6 +145,10 @@ namespace knoxic {
         } catch (const std::exception& e) {
             std::cerr << "Failed to load albedo texture: " << e.what() << std::endl;
             hasAlbedoTexture = false;
+
+            // Make the object neon pink if it cant load or find the material
+            failedAlbedo = true;
+            properties.albedo = glm::vec3(1.0f, 0.0f, 1.0f); // pink
         }
     }
 

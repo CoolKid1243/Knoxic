@@ -50,6 +50,8 @@ namespace knoxic {
         // Update descriptor set
         void updateDescriptorSet(KnoxicDescriptorSetLayout& setLayout, KnoxicDescriptorPool& pool);
 
+        bool albedoLoadFailed() const { return failedAlbedo; }
+
     private:
         void createDefaultTexture();
         void createTextureImage(const std::string& filepath, VkImage& image, VkDeviceMemory& imageMemory);
@@ -92,6 +94,8 @@ namespace knoxic {
         bool hasNormalTexture = false;
         bool hasRoughnessTexture = false;
         bool hasMetallicTexture = false;
+
+        bool failedAlbedo = false;
     };
 
     struct MaterialComponent {
