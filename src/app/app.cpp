@@ -11,11 +11,15 @@
 #include "../systems/vulkan/knoxic_vk_render_system.hpp"
 #include "../systems/vulkan/knoxic_vk_point_light_system.hpp"
 #include "../systems/vulkan/knoxic_vk_material_system.hpp"
+#include "../core/ecs/coordinator_instance.hpp"
+#include "../core/ecs/components.hpp"
+#include "../core/ecs/ecs_systems.hpp"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 #include <cassert>
 #include <memory>
@@ -34,10 +38,54 @@ namespace knoxic {
             .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 4000)
             .build();
 
+        // Initialize ECS and register components/systems
+        gCoordinator.Init();
+        gCoordinator.RegisterComponent<TransformComponent>();
+        gCoordinator.RegisterComponent<ModelComponent>();
+        gCoordinator.RegisterComponent<MaterialComponent>();
+        gCoordinator.RegisterComponent<ColorComponent>();
+        gCoordinator.RegisterComponent<PointLightComponent>();
+
+        renderableSystem = gCoordinator.RegisterSystem<RenderableSystem>();
+        {
+            Signature signature;
+            signature.set(gCoordinator.GetComponentType<TransformComponent>());
+            signature.set(gCoordinator.GetComponentType<ModelComponent>());
+            gCoordinator.SetSystemSignature<RenderableSystem>(signature);
+        }
+
+        pointLightSystem = gCoordinator.RegisterSystem<PointLightECSSystem>();
+        {
+            Signature signature;
+            signature.set(gCoordinator.GetComponentType<TransformComponent>());
+            signature.set(gCoordinator.GetComponentType<PointLightComponent>());
+            gCoordinator.SetSystemSignature<PointLightECSSystem>(signature);
+        }
+
         loadGameObjects(); 
     }
 
-    App::~App() {}
+    App::~App() {
+        // Ensure GPU resources inside ECS components are destroyed before Vulkan device
+        if (renderableSystem) {
+            for (auto entity : renderableSystem->mEntities) {
+                // Release materials
+                if (gCoordinator.HasComponent<MaterialComponent>(entity)) {
+                    auto &matComp = gCoordinator.GetComponent<MaterialComponent>(entity);
+                    if (matComp.material) {
+                        matComp.material.reset();
+                    }
+                }
+                // Release models (buffers)
+                if (gCoordinator.HasComponent<ModelComponent>(entity)) {
+                    auto &modelComp = gCoordinator.GetComponent<ModelComponent>(entity);
+                    if (modelComp.model) {
+                        modelComp.model.reset();
+                    }
+                }
+            }
+        }
+    }
 
     void App::run() {
         std::vector<std::unique_ptr<KnoxicBuffer>> uboBuffers(KnoxicSwapChain::MAX_FRAMES_IN_FLIGHT);
@@ -73,13 +121,15 @@ namespace knoxic {
             knoxicDevice,
             knoxicRenderer.getSwapChainRenderPass(),
             globalSetLayout->getDescriptorSetLayout(),
-            materialSetLayout->getDescriptorSetLayout()
+            materialSetLayout->getDescriptorSetLayout(),
+            renderableSystem
         };
         
-        PointLightSystem pointLightSystem {
+        PointLightSystem pointLightVkSystem {
             knoxicDevice,
             knoxicRenderer.getSwapChainRenderPass(),
-            globalSetLayout->getDescriptorSetLayout()
+            globalSetLayout->getDescriptorSetLayout(),
+            pointLightSystem
         };
         
         KnoxicCamera camera{};
@@ -114,26 +164,25 @@ namespace knoxic {
                     frameTime,
                     commandBuffer,
                     camera,
-                    globalDescriptorSets[frameIndex],
-                    gameObjects
+                    globalDescriptorSets[frameIndex]
                 };
 
                 // Update materials
-                materialSystem.updateMaterials(frameInfo, *materialSetLayout, *materialPool);
+                materialSystem.updateMaterials(frameInfo, *materialSetLayout, *materialPool, renderableSystem);
 
                 // Update
                 GlobalUbo ubo{};
                 ubo.projection = camera.getProjection();
                 ubo.view = camera.getView();
                 ubo.inverseView = camera.getInverseView();
-                pointLightSystem.update(frameInfo, ubo);
+                pointLightVkSystem.update(frameInfo, ubo);
                 uboBuffers[frameIndex]->writeToBuffer(&ubo);
                 uboBuffers[frameIndex]->flush();
 
                 // Render
                 knoxicRenderer.beginSwapChainRenderPass(commandBuffer);
                 renderSystem.renderGameObjects(frameInfo);
-                pointLightSystem.render(frameInfo);
+                pointLightVkSystem.render(frameInfo);
                 knoxicRenderer.endSwapChainRenderPass(commandBuffer);
                 knoxicRenderer.endFrame();
             }
@@ -147,35 +196,44 @@ namespace knoxic {
 
         // -- First scene --
         {
-            // Creates the flat vase object
+            // Creates the flat vase entity
             knoxicModel = KnoxicModel::createModelFromFile(knoxicDevice, "res/models/flat_vase.obj");
-            auto flatVase = KnoxicGameObject::createGameObject(knoxicDevice);
-            flatVase.model = knoxicModel;
-            flatVase.transform.translation = {-0.5f, 0.5f, 0.0f};
-            flatVase.transform.scale = {3.0f, 1.5f, 3.0f};
-            flatVase.material->setRoughness(0.8f);
-            flatVase.material->setMetallic(0.7f);
-            gameObjects.emplace(flatVase.getId(), std::move(flatVase));
+            Entity flatVase = gCoordinator.CreateEntity();
+            TransformComponent flatVaseTransform{};
+            flatVaseTransform.translation = {-0.5f, 0.5f, 0.0f};
+            flatVaseTransform.scale = {3.0f, 1.5f, 3.0f};
+            gCoordinator.AddComponent(flatVase, flatVaseTransform);
+            gCoordinator.AddComponent(flatVase, ModelComponent{knoxicModel});
+            MaterialComponent flatVaseMat{std::make_shared<KnoxicMaterial>(knoxicDevice)};
+            flatVaseMat.setRoughness(0.8f);
+            flatVaseMat.setMetallic(0.7f);
+            gCoordinator.AddComponent(flatVase, flatVaseMat);
 
-            // Creates the smooth vase object
+            // Creates the smooth vase entity
             knoxicModel = KnoxicModel::createModelFromFile(knoxicDevice, "res/models/smooth_vase.obj");
-            auto smoothVase = KnoxicGameObject::createGameObject(knoxicDevice);
-            smoothVase.model = knoxicModel;
-            smoothVase.transform.translation = {0.5f, 0.5f, 0.0f};
-            smoothVase.transform.scale = {3.0f, 1.5f, 3.0f};
-            smoothVase.material->setRoughness(0.8f);
-            smoothVase.material->setMetallic(0.7f);
-            gameObjects.emplace(smoothVase.getId(), std::move(smoothVase));
+            Entity smoothVase = gCoordinator.CreateEntity();
+            TransformComponent smoothVaseTransform{};
+            smoothVaseTransform.translation = {0.5f, 0.5f, 0.0f};
+            smoothVaseTransform.scale = {3.0f, 1.5f, 3.0f};
+            gCoordinator.AddComponent(smoothVase, smoothVaseTransform);
+            gCoordinator.AddComponent(smoothVase, ModelComponent{knoxicModel});
+            MaterialComponent smoothVaseMat{std::make_shared<KnoxicMaterial>(knoxicDevice)};
+            smoothVaseMat.setRoughness(0.8f);
+            smoothVaseMat.setMetallic(0.7f);
+            gCoordinator.AddComponent(smoothVase, smoothVaseMat);
 
-            // Creates the floor object
+            // Creates the floor entity
             knoxicModel = KnoxicModel::createModelFromFile(knoxicDevice, "res/models/quad.obj");
-            auto floor = KnoxicGameObject::createGameObject(knoxicDevice);
-            floor.model = knoxicModel;
-            floor.transform.translation = {0.0f, 0.5f, 0.0f};
-            floor.transform.scale = {3.0f, 1.0f, 3.0f};
-            floor.material->setMetallic(0.7f);
-            floor.material->setRoughness(0.3f);
-            gameObjects.emplace(floor.getId(), std::move(floor));
+            Entity floor = gCoordinator.CreateEntity();
+            TransformComponent floorTransform{};
+            floorTransform.translation = {0.0f, 0.5f, 0.0f};
+            floorTransform.scale = {3.0f, 1.0f, 3.0f};
+            gCoordinator.AddComponent(floor, floorTransform);
+            gCoordinator.AddComponent(floor, ModelComponent{knoxicModel});
+            MaterialComponent floorMat{std::make_shared<KnoxicMaterial>(knoxicDevice)};
+            floorMat.setMetallic(0.7f);
+            floorMat.setRoughness(0.3f);
+            gCoordinator.AddComponent(floor, floorMat);
 
             // Create point lights
             {
@@ -188,107 +246,133 @@ namespace knoxic {
                     {1.0f, 1.0f, 1.0f}
                 };
 
-                // Create the point lights and rotate them in a ring / circle
-                for (int i = 0; i < lightColors.size(); i++) {
-                    auto pointLight = KnoxicGameObject::makePointLight(knoxicDevice, 0.05f);
-                    pointLight.color = lightColors[i];
+                for (int i = 0; i < static_cast<int>(lightColors.size()); i++) {
+                    Entity lightEnt = gCoordinator.CreateEntity();
+                    TransformComponent t{};
+                    t.scale = glm::vec3(0.05f);
                     auto rotateLight = glm::rotate(
                         glm::mat4(1.0f),
                         (i * glm::two_pi<float>()) / lightColors.size(),
-                        {0.0f, -1.0f, 0.0f}
+                        glm::vec3{0.0f, -1.0f, 0.0f}
                     );
-                    pointLight.transform.translation = glm::vec3(rotateLight * glm::vec4(-1.0f, -1.0f, -1.0f, 1.0f));
-                    gameObjects.emplace(pointLight.getId(), std::move(pointLight));
+                    t.translation = glm::vec3(rotateLight * glm::vec4(-1.0f, -1.0f, -1.0f, 1.0f));
+                    gCoordinator.AddComponent(lightEnt, t);
+                    gCoordinator.AddComponent(lightEnt, PointLightComponent{0.5f});
+                    gCoordinator.AddComponent(lightEnt, ColorComponent{lightColors[i]});
                 }
             }
         }
 
         // -- Second scene --
         {
-            // Creates the vase object
+            // Creates the vase entity
             knoxicModel = KnoxicModel::createModelFromFile(knoxicDevice, "res/models/smooth_vase.fbx");
-            auto vase = KnoxicGameObject::createGameObject(knoxicDevice);
-            vase.model = knoxicModel;
-            vase.transform.translation = {10.0f, 0.5f, 0.0f};
-            vase.transform.scale = {3.0f, 1.5f, 3.0f};
-            vase.material->setRoughness(0.8f);
-            vase.material->setMetallic(0.7f);
-            gameObjects.emplace(vase.getId(), std::move(vase));
+            Entity vase = gCoordinator.CreateEntity();
+            TransformComponent vaseTransform{};
+            vaseTransform.translation = {10.0f, 0.5f, 0.0f};
+            vaseTransform.scale = {3.0f, 1.5f, 3.0f};
+            gCoordinator.AddComponent(vase, vaseTransform);
+            gCoordinator.AddComponent(vase, ModelComponent{knoxicModel});
+            MaterialComponent vaseMat{std::make_shared<KnoxicMaterial>(knoxicDevice)};
+            vaseMat.setRoughness(0.8f);
+            vaseMat.setMetallic(0.7f);
+            gCoordinator.AddComponent(vase, vaseMat);
             
-            // Creates the floor object
+            // Creates the floor entity
             knoxicModel = KnoxicModel::createModelFromFile(knoxicDevice, "res/models/quad.obj");
-            auto floor2 = KnoxicGameObject::createGameObject(knoxicDevice);
-            floor2.model = knoxicModel;
-            floor2.transform.translation = {10.0f, 0.5f, 0.0f};
-            floor2.transform.scale = {3.0f, 1.0f, 3.0f};
-            floor2.material->loadAlbedoTexture("res/textures/missing.png");
-            floor2.material->setRoughness(0.5f);
-            floor2.material->setMetallic(0.0f);
-            gameObjects.emplace(floor2.getId(), std::move(floor2));
+            Entity floor2 = gCoordinator.CreateEntity();
+            TransformComponent floor2Transform{};
+            floor2Transform.translation = {10.0f, 0.5f, 0.0f};
+            floor2Transform.scale = {3.0f, 1.0f, 3.0f};
+            gCoordinator.AddComponent(floor2, floor2Transform);
+            gCoordinator.AddComponent(floor2, ModelComponent{knoxicModel});
+            MaterialComponent floor2Mat{std::make_shared<KnoxicMaterial>(knoxicDevice)};
+            floor2Mat.loadAlbedoTexture("res/textures/missing.png");
+            floor2Mat.setRoughness(0.5f);
+            floor2Mat.setMetallic(0.0f);
+            gCoordinator.AddComponent(floor2, floor2Mat);
 
-            // Creates a point light
-            auto pointLight1 = KnoxicGameObject::makePointLight(knoxicDevice, 0.05f);
-            pointLight1.color = glm::vec3{1.0f, 1.0f, 1.0f};
-            pointLight1.transform.translation = glm::vec3{10.0f, -0.5f, -2.0f};
-            gameObjects.emplace(pointLight1.getId(), std::move(pointLight1));
+            // Creates a point light entity
+            Entity pointLight1 = gCoordinator.CreateEntity();
+            TransformComponent pl1T{};
+            pl1T.translation = {10.0f, -0.5f, -2.0f};
+            pl1T.scale = glm::vec3(0.05f);
+            gCoordinator.AddComponent(pointLight1, pl1T);
+            gCoordinator.AddComponent(pointLight1, PointLightComponent{0.5f});
+            gCoordinator.AddComponent(pointLight1, ColorComponent{glm::vec3{1.0f, 1.0f, 1.0f}});
         }
 
         // -- Third scene --
         {
-            // Creates the medievalHelmet object
+            // Creates the medievalHelmet entity
             knoxicModel = KnoxicModel::createModelFromFile(knoxicDevice, "res/sketchfab/medieval_helmet/scene.gltf");
-            auto medievalHelmet = KnoxicGameObject::createGameObject(knoxicDevice);
-            medievalHelmet.model = knoxicModel;
-            medievalHelmet.transform.translation = {-10.0f, 0.5f, 0.0f};
-            medievalHelmet.transform.scale = {0.03f, 0.03f,0.03f};
-            medievalHelmet.transform.rotation = {glm::radians(90.0f), 0.0f, 0.0f};
-            medievalHelmet.material->loadAlbedoTexture("res/sketchfab/medieval_helmet/textures/medieval_helmet.jpeg");
-            medievalHelmet.material->setRoughness(0.02f);
-            medievalHelmet.material->setMetallic(2.0f);
-            gameObjects.emplace(medievalHelmet.getId(), std::move(medievalHelmet));
+            Entity medievalHelmet = gCoordinator.CreateEntity();
+            TransformComponent helmetT{};
+            helmetT.translation = {-10.0f, 0.5f, 0.0f};
+            helmetT.scale = {0.03f, 0.03f, 0.03f};
+            helmetT.rotation = {glm::radians(90.0f), 0.0f, 0.0f};
+            gCoordinator.AddComponent(medievalHelmet, helmetT);
+            gCoordinator.AddComponent(medievalHelmet, ModelComponent{knoxicModel});
+            MaterialComponent helmetMat{std::make_shared<KnoxicMaterial>(knoxicDevice)};
+            helmetMat.loadAlbedoTexture("res/sketchfab/medieval_helmet/textures/medieval_helmet.jpeg");
+            helmetMat.setRoughness(0.02f);
+            helmetMat.setMetallic(2.0f);
+            gCoordinator.AddComponent(medievalHelmet, helmetMat);
 
-            // Creates the floor object
+            // Creates the floor entity
             knoxicModel = KnoxicModel::createModelFromFile(knoxicDevice, "res/models/quad.obj");
-            auto floor3 = KnoxicGameObject::createGameObject(knoxicDevice);
-            floor3.model = knoxicModel;
-            floor3.transform.translation = {-10.0f, 0.5f, 0.0f};
-            floor3.transform.scale = {3.0f, 1.0f, 3.0f};
-            floor3.material->loadAlbedoTexture("res/textures/woodPanels.jpg");
-            floor3.material->setRoughness(0.5f);
-            floor3.material->setMetallic(0.3f);
-            gameObjects.emplace(floor3.getId(), std::move(floor3));
+            Entity floor3 = gCoordinator.CreateEntity();
+            TransformComponent floor3T{};
+            floor3T.translation = {-10.0f, 0.5f, 0.0f};
+            floor3T.scale = {3.0f, 1.0f, 3.0f};
+            gCoordinator.AddComponent(floor3, floor3T);
+            gCoordinator.AddComponent(floor3, ModelComponent{knoxicModel});
+            MaterialComponent floor3Mat{std::make_shared<KnoxicMaterial>(knoxicDevice)};
+            floor3Mat.loadAlbedoTexture("res/textures/woodPanels.jpg");
+            floor3Mat.setRoughness(0.5f);
+            floor3Mat.setMetallic(0.3f);
+            gCoordinator.AddComponent(floor3, floor3Mat);
 
-            // Creates the wall object
+            // Creates the wall entity
             knoxicModel = KnoxicModel::createModelFromFile(knoxicDevice, "res/models/quad.obj");
-            auto wall = KnoxicGameObject::createGameObject(knoxicDevice);
-            wall.model = knoxicModel;
-            wall.transform.translation = {-10.0f, -2.5f, 3.0f};
-            wall.transform.scale = {3.0f, 1.0f, 3.0f};
-            wall.transform.rotation = {glm::radians(180.0f), glm::radians(90.0f), glm::radians(90.0f)};
-            wall.material->loadAlbedoTexture("res/textures/stoneSlate/castle_wall_slates_diff_4k.jpg");
-            wall.material->loadNormalTexture("res/textures/stoneSlate/castle_wall_slates_nor_dx_4k.jpg");
-            wall.material->setRoughness(0.002f);
-            wall.material->setMetallic(3.0f);
-            gameObjects.emplace(wall.getId(), std::move(wall));
+            Entity wall = gCoordinator.CreateEntity();
+            TransformComponent wallT{};
+            wallT.translation = {-10.0f, -2.5f, 3.0f};
+            wallT.scale = {3.0f, 1.0f, 3.0f};
+            wallT.rotation = {glm::radians(180.0f), glm::radians(90.0f), glm::radians(90.0f)};
+            gCoordinator.AddComponent(wall, wallT);
+            gCoordinator.AddComponent(wall, ModelComponent{knoxicModel});
+            MaterialComponent wallMat{std::make_shared<KnoxicMaterial>(knoxicDevice)};
+            wallMat.loadAlbedoTexture("res/textures/stoneSlate/castle_wall_slates_diff_4k.jpg");
+            wallMat.loadNormalTexture("res/textures/stoneSlate/castle_wall_slates_nor_dx_4k.jpg");
+            wallMat.setRoughness(0.002f);
+            wallMat.setMetallic(3.0f);
+            gCoordinator.AddComponent(wall, wallMat);
 
-            // Creates the wall2 object
+            // Creates the wall2 entity
             knoxicModel = KnoxicModel::createModelFromFile(knoxicDevice, "res/models/quad.obj");
-            auto wall2 = KnoxicGameObject::createGameObject(knoxicDevice);
-            wall2.model = knoxicModel;
-            wall2.transform.translation = {-13.0f, -2.5f, 0.0f};
-            wall2.transform.scale = {3.0f, 1.0f, 3.0f};
-            wall2.transform.rotation = {0.0f, 0.0f, glm::radians(90.0f)};
-            wall2.material->loadAlbedoTexture("res/textures/stoneSlate/castle_wall_slates_diff_4k.jpg");
-            wall2.material->loadNormalTexture("res/textures/stoneSlate/castle_wall_slates_nor_dx_4k.jpg");
-            wall2.material->setRoughness(0.002f);
-            wall2.material->setMetallic(3.0f);
-            gameObjects.emplace(wall2.getId(), std::move(wall2));
+            Entity wall2 = gCoordinator.CreateEntity();
+            TransformComponent wall2T{};
+            wall2T.translation = {-13.0f, -2.5f, 0.0f};
+            wall2T.scale = {3.0f, 1.0f, 3.0f};
+            wall2T.rotation = {0.0f, 0.0f, glm::radians(90.0f)};
+            gCoordinator.AddComponent(wall2, wall2T);
+            gCoordinator.AddComponent(wall2, ModelComponent{knoxicModel});
+            MaterialComponent wall2Mat{std::make_shared<KnoxicMaterial>(knoxicDevice)};
+            wall2Mat.loadAlbedoTexture("res/textures/stoneSlate/castle_wall_slates_diff_4k.jpg");
+            wall2Mat.loadNormalTexture("res/textures/stoneSlate/castle_wall_slates_nor_dx_4k.jpg");
+            wall2Mat.setRoughness(0.002f);
+            wall2Mat.setMetallic(3.0f);
+            gCoordinator.AddComponent(wall2, wall2Mat);
 
-            // Creates a point light
-            auto pointLight2 = KnoxicGameObject::makePointLight(knoxicDevice, 0.08f);
-            pointLight2.color = glm::vec3{1.0f, 1.0f, 1.0f};
-            pointLight2.transform.translation = glm::vec3{-10.0f, -0.5f, -2.0f};
-            gameObjects.emplace(pointLight2.getId(), std::move(pointLight2));
+            // Creates a point light entity
+            Entity pointLight2 = gCoordinator.CreateEntity();
+            TransformComponent pl2T{};
+            pl2T.translation = {-10.0f, -0.5f, -2.0f};
+            pl2T.scale = glm::vec3(0.08f);
+            gCoordinator.AddComponent(pointLight2, pl2T);
+            gCoordinator.AddComponent(pointLight2, PointLightComponent{0.8f});
+            gCoordinator.AddComponent(pointLight2, ColorComponent{glm::vec3{1.0f, 1.0f, 1.0f}});
         }
     }
 }

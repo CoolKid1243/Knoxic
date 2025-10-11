@@ -1,11 +1,14 @@
 #include "knoxic_vk_point_light_system.hpp"
 #include "../../core/vulkan/knoxic_vk_device.hpp"
 #include "../../graphics/knoxic_frame_info.hpp"
+#include "../../core/ecs/components.hpp"
+#include "../../core/ecs/coordinator_instance.hpp"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 #include <memory>
 #include <stdexcept>
@@ -19,7 +22,12 @@ namespace knoxic {
         float radius;
     };
 
-    PointLightSystem::PointLightSystem(KnoxicDevice &device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout) : knoxicDevice{device} {
+    PointLightSystem::PointLightSystem(
+        KnoxicDevice &device,
+        VkRenderPass renderPass,
+        VkDescriptorSetLayout globalSetLayout,
+        std::shared_ptr<PointLightECSSystem> ecsPointLightSystem
+    ) : knoxicDevice{device}, pointLightSystem{std::move(ecsPointLightSystem)} {
         createPipelineLayout(globalSetLayout);
         createPipeline(renderPass);
     }
@@ -71,55 +79,38 @@ namespace knoxic {
         time += frameInfo.frameTime;
 
         int lightIndex = 0;
-        for (auto &keyValue : frameInfo.gameObjects) {
-            auto &obj = keyValue.second;
-            if (obj.pointLight == nullptr) continue;
+        for (auto entity : pointLightSystem->mEntities) {
+            auto &transform = gCoordinator.GetComponent<TransformComponent>(entity);
+            auto &light = gCoordinator.GetComponent<PointLightComponent>(entity);
 
             assert(lightIndex < MAX_LIGHTS && "Point lights exceed maximum specified limit");
 
-            for (auto &keyValue : frameInfo.gameObjects) {
-                auto &obj = keyValue.second;
-                if (obj.pointLight == nullptr) continue;
-
-                assert(lightIndex < MAX_LIGHTS && "Point lights exceed maximum specified limit");
-                
-                // Scene 1: rotating ring lights
-                if (obj.transform.translation.x > -3.0f && obj.transform.translation.x < 3.0f) {
-                    auto rotateLight = glm::rotate(
-                        glm::mat4(1.0f),
-                        frameInfo.frameTime * 0.12f,
-                        {0.0f, -1.0f, 0.0f}
-                    );
-                    obj.transform.translation = glm::vec3(rotateLight * glm::vec4(obj.transform.translation, 1.0f));
-                }
-                // Scene 2: linear moving point light
-                else if (obj.transform.translation.x > 7.0f && obj.transform.translation.x < 13.0f) {
-                    obj.transform.translation.x = 10.0f + sin(time * 1.0f) * 2.0f;
-                }
-                // Scene 3: pendulum oscillation 
-                else if (obj.transform.translation.x > -13.0f && obj.transform.translation.x < -7.0f) {
-                    // Create smooth pendulum motion using sin wave
-                    float pendulumAngle = sin(time * 0.6f) * (glm::pi<float>() / 2.0f);
-                    
-                    glm::vec3 helmetCenter = glm::vec3(-10.0f, 0.5f, 0.0f);
-                    float radius = 2.0f; // Distance from helmet
-                    
-                    // Calculate new position using pendulum angle
-                    obj.transform.translation.x = helmetCenter.x - radius * sin(pendulumAngle);
-                    obj.transform.translation.y = helmetCenter.y - 1.0f;
-                    obj.transform.translation.z = helmetCenter.z - radius * cos(pendulumAngle) - 0.3f;
-                }
-
-                ubo.pointLights[lightIndex].position = glm::vec4(obj.transform.translation, 1.0f);
-                ubo.pointLights[lightIndex].color = glm::vec4(obj.color, obj.pointLight->lightIntensity);
-
-                lightIndex += 1;
+            // Animate the point lights
+            if (transform.translation.x > -3.0f && transform.translation.x < 3.0f) {
+                auto rotateLight = glm::rotate(
+                    glm::mat4(1.0f),
+                    frameInfo.frameTime * 0.6f,
+                    glm::vec3{0.0f, -1.0f, 0.0f}
+                );
+                transform.translation = glm::vec3(rotateLight * glm::vec4(transform.translation, 1.0f));
+            } else if (transform.translation.x > 7.0f && transform.translation.x < 13.0f) {
+                transform.translation.x = 10.0f + sin(time * 1.0f) * 2.0f;
+            } else if (transform.translation.x > -13.0f && transform.translation.x < -7.0f) {
+                float pendulumAngle = sin(time * 0.6f) * (glm::pi<float>() / 2.0f);
+                glm::vec3 helmetCenter = glm::vec3(-10.0f, 0.5f, 0.0f);
+                float radius = 2.0f;
+                transform.translation.x = helmetCenter.x - radius * sin(pendulumAngle);
+                transform.translation.y = helmetCenter.y - 1.0f;
+                transform.translation.z = helmetCenter.z - radius * cos(pendulumAngle) - 0.3f;
             }
 
-            // Copy light to ubo
-            ubo.pointLights[lightIndex].position = glm::vec4(obj.transform.translation, 1.0f);
-            ubo.pointLights[lightIndex].color = glm::vec4(obj.color, obj.pointLight->lightIntensity);
+            glm::vec3 color = glm::vec3(1.0f);
+            if (gCoordinator.HasComponent<ColorComponent>(entity)) {
+                color = gCoordinator.GetComponent<ColorComponent>(entity).color;
+            }
 
+            ubo.pointLights[lightIndex].position = glm::vec4(transform.translation, 1.0f);
+            ubo.pointLights[lightIndex].color = glm::vec4(color, light.lightIntensity);
             lightIndex += 1;
         }
 
@@ -127,16 +118,13 @@ namespace knoxic {
     }
 
     void PointLightSystem::render(FrameInfo &frameInfo) {
-        // Sort lights
-        std::map<float, KnoxicGameObject::id_t> sorted;
-        for (auto &keyValue : frameInfo.gameObjects) {
-            auto &obj = keyValue.second;
-            if (obj.pointLight == nullptr) continue;
-
-            // Calculate distance
-            auto offset = frameInfo.camera.getPosition() - obj.transform.translation;
+        // Sort lights by distance to camera (furthest first)
+        std::map<float, Entity> sorted;
+        for (auto entity : pointLightSystem->mEntities) {
+            auto &transform = gCoordinator.GetComponent<TransformComponent>(entity);
+            auto offset = frameInfo.camera.getPosition() - transform.translation;
             float disSquared = glm::dot(offset, offset);
-            sorted[disSquared] = obj.getId();
+            sorted[disSquared] = entity;
         }
 
         knoxicPipeline->bind(frameInfo.commandBuffer);
@@ -150,15 +138,21 @@ namespace knoxic {
             0, nullptr
         );
 
-        // Itterate through the lights in reverse order
+        // Iterate through the lights in reverse order
         for (auto it = sorted.rbegin(); it != sorted.rend(); it++) {
-            // Use game obj id to find light object
-            auto &obj = frameInfo.gameObjects.at(it->second);
+            Entity entity = it->second;
+            auto &transform = gCoordinator.GetComponent<TransformComponent>(entity);
+            auto &light = gCoordinator.GetComponent<PointLightComponent>(entity);
+
+            glm::vec3 color = glm::vec3(1.0f);
+            if (gCoordinator.HasComponent<ColorComponent>(entity)) {
+                color = gCoordinator.GetComponent<ColorComponent>(entity).color;
+            }
 
             PointLightPushConstants push{};
-            push.position = glm::vec4(obj.transform.translation, 1.0f);
-            push.color = glm::vec4(obj.color, obj.pointLight->lightIntensity);
-            push.radius = obj.transform.scale.x;
+            push.position = glm::vec4(transform.translation, 1.0f);
+            push.color = glm::vec4(color, light.lightIntensity);
+            push.radius = transform.scale.x;
 
             vkCmdPushConstants(
                 frameInfo.commandBuffer,
@@ -171,6 +165,5 @@ namespace knoxic {
 
             vkCmdDraw(frameInfo.commandBuffer, 6, 1, 0, 0);
         }
-
     }
 }

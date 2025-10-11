@@ -1,4 +1,6 @@
 #include "knoxic_vk_material_system.hpp"
+#include "../../core/ecs/components.hpp"
+#include "../../core/ecs/coordinator_instance.hpp"
 
 namespace knoxic {
 
@@ -15,11 +17,19 @@ namespace knoxic {
             .build();
     }
 
-    void MaterialSystem::updateMaterials(FrameInfo &frameInfo, KnoxicDescriptorSetLayout& materialSetLayout, KnoxicDescriptorPool& materialPool) {
-        for (auto &keyValue : frameInfo.gameObjects) {
-            auto &obj = keyValue.second;
-            if (obj.material != nullptr && obj.material->material != nullptr) {
-                obj.material->material->updateDescriptorSet(materialSetLayout, materialPool);
+    void MaterialSystem::updateMaterials(
+        FrameInfo & /*frameInfo*/,
+        KnoxicDescriptorSetLayout& materialSetLayout,
+        KnoxicDescriptorPool& materialPool,
+        std::shared_ptr<RenderableSystem> renderableSystem
+    ) {
+        // Iterate over ECS renderable entities and update material descriptor sets
+        for (auto entity : renderableSystem->mEntities) {
+            if (gCoordinator.HasComponent<MaterialComponent>(entity)) {
+                auto &matComp = gCoordinator.GetComponent<MaterialComponent>(entity);
+                if (matComp.material) {
+                    matComp.material->updateDescriptorSet(materialSetLayout, materialPool);
+                }
             }
         }
     }

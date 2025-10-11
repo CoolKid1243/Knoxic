@@ -3,6 +3,7 @@
 #include "../../core/vulkan/knoxic_vk_device.hpp"
 #include "../../core/vulkan/knoxic_vk_descriptors.hpp"
 #include "../../graphics/knoxic_frame_info.hpp"
+#include "../../core/ecs/ecs_systems.hpp"
 
 #include <memory>
 
@@ -18,7 +19,8 @@ namespace knoxic {
 
         std::unique_ptr<KnoxicDescriptorSetLayout> createMaterialSetLayout();
             
-        void updateMaterials(FrameInfo &frameInfo, KnoxicDescriptorSetLayout& materialSetLayout, KnoxicDescriptorPool& materialPool);
+        void updateMaterials(FrameInfo &frameInfo, KnoxicDescriptorSetLayout& materialSetLayout, KnoxicDescriptorPool& materialPool, 
+            std::shared_ptr<RenderableSystem> renderableSystem);
 
     private:
         KnoxicDevice &knoxicDevice;

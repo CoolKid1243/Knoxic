@@ -3,6 +3,7 @@
 #include "../../graphics/vulkan/knoxic_vk_pipeline.hpp"
 #include "../../core/vulkan/knoxic_vk_device.hpp"
 #include "../../graphics/knoxic_frame_info.hpp"
+#include "../../core/ecs/ecs_systems.hpp"
 
 #include <memory>
 
@@ -10,7 +11,8 @@ namespace knoxic {
 
     class PointLightSystem {
     public:
-        PointLightSystem(KnoxicDevice &device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout);
+        PointLightSystem(KnoxicDevice &device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout,
+                         std::shared_ptr<PointLightECSSystem> ecsPointLightSystem);
         ~PointLightSystem();
 
         PointLightSystem(const PointLightSystem &) = delete;
@@ -26,5 +28,8 @@ namespace knoxic {
         KnoxicDevice &knoxicDevice;
         std::unique_ptr<KnoxicPipeline> knoxicPipeline;
         VkPipelineLayout pipelineLayout;
+
+        // ECS
+        std::shared_ptr<PointLightECSSystem> pointLightSystem;
     };
 }

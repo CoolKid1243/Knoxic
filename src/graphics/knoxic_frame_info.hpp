@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../camera/knoxic_camera.hpp"
-#include "../core/knoxic_game_object.hpp"
 
 #include <vulkan/vulkan.h>
 
@@ -29,6 +28,5 @@ namespace knoxic {
         VkCommandBuffer commandBuffer;
         KnoxicCamera &camera;
         VkDescriptorSet globalDescriptorSet;
-        KnoxicGameObject::Map &gameObjects;
     };
 }

@@ -31,6 +31,15 @@ void main() {
         discard;
     }
     
-    float cosDis = 0.5* (cos(dis * M_PI) + 1.0); // ranges from 1 -> 0
-    outColor = vec4(push.color.xyz + cosDis, cosDis);
+    // Temporary? looks cool
+    float cosDis = 0.5 * (cos(dis * M_PI * 1.5) + 1.0);
+    outColor = vec4(push.color.xyz * cosDis, cosDis);
+
+    // Without the white center
+    // float cosDis = 0.5 * (cos(dis * M_PI) + 1.0);
+    // outColor = vec4(push.color.xyz, cosDis);
+
+    // With the white center (default)
+    // float cosDis = 0.5 * (cos(dis * M_PI) + 1.0);
+    // outColor = vec4(push.color.xyz + cosDis, cosDis);
 }

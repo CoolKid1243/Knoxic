@@ -2,25 +2,13 @@
 
 #include "../graphics/vulkan/knoxic_vk_model.hpp"
 #include "../graphics/vulkan/knoxic_vk_material.hpp"
+#include "ecs/components.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <memory>
 #include <unordered_map>
 
 namespace knoxic {
-
-    struct TransformComponent {
-        glm::vec3 translation{}; // position offset
-        glm::vec3 scale{1.0f, 1.0f, 1.0f};
-        glm::vec3 rotation{};
-
-        glm::mat4 mat4();
-        glm::mat3 normalMatrix();
-    };
-
-    struct PointLightComponent {
-        float lightIntensity = 1.0f;
-    };
 
     class KnoxicGameObject {
     public:

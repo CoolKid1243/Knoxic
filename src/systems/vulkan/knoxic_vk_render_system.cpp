@@ -1,6 +1,8 @@
 #include "knoxic_vk_render_system.hpp"
 #include "../../core/vulkan/knoxic_vk_device.hpp"
 #include "../../graphics/knoxic_frame_info.hpp"
+#include "../../core/ecs/components.hpp"
+#include "../../core/ecs/coordinator_instance.hpp"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -24,8 +26,13 @@ namespace knoxic {
         glm::vec2 textureScale{1.0f, 1.0f};
     };
 
-    RenderSystem::RenderSystem(KnoxicDevice &device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout,
-    VkDescriptorSetLayout materialSetLayout) : knoxicDevice{device} {
+    RenderSystem::RenderSystem(
+        KnoxicDevice &device,
+        VkRenderPass renderPass,
+        VkDescriptorSetLayout globalSetLayout,
+        VkDescriptorSetLayout materialSetLayout,
+        std::shared_ptr<RenderableSystem> ecsRenderableSystem
+    ) : knoxicDevice{device}, renderableSystem{std::move(ecsRenderableSystem)} {
         createPipelineLayout(globalSetLayout, materialSetLayout);
         createPipeline(renderPass);
     }
@@ -81,37 +88,46 @@ namespace knoxic {
             0, nullptr
         );
 
-        for (auto &keyValue: frameInfo.gameObjects) {
-            auto &obj = keyValue.second;
-            if (obj.model == nullptr) continue;
-            
+        // Iterate over ECS renderable entities
+        for (auto entity : renderableSystem->mEntities) {
+            // Required components
+            auto &transform = gCoordinator.GetComponent<TransformComponent>(entity);
+            auto &modelComp = gCoordinator.GetComponent<ModelComponent>(entity);
+
+            if (!modelComp.model) continue;
+
             PushConstantData push{};
-            push.modelMatrix = obj.transform.mat4();
-            push.normalMatrix = obj.transform.normalMatrix();
-            
-            // Set material properties
-            if (obj.material != nullptr && obj.material->material != nullptr) {
-                const auto& matProps = obj.material->material->getProperties();
-                push.albedo = matProps.albedo;
-                push.metallic = matProps.metallic;
-                push.roughness = matProps.roughness;
-                push.ao = matProps.ao;
-                push.textureOffset = matProps.textureOffset;
-                push.textureScale = matProps.textureScale;
-                
-                // Bind material descriptor set
-                VkDescriptorSet materialDescriptorSet = obj.material->material->getDescriptorSet();
-                vkCmdBindDescriptorSets(
-                    frameInfo.commandBuffer,
-                    VK_PIPELINE_BIND_POINT_GRAPHICS,
-                    pipelineLayout,
-                    1, 1, // Set 1 is for materials
-                    &materialDescriptorSet,
-                    0, nullptr
-                );
+            push.modelMatrix = transform.mat4();
+            push.normalMatrix = transform.normalMatrix();
+
+            // Optional material
+            if (gCoordinator.HasComponent<MaterialComponent>(entity)) {
+                auto &matComp = gCoordinator.GetComponent<MaterialComponent>(entity);
+                if (matComp.material) {
+                    const auto& matProps = matComp.material->getProperties();
+                    push.albedo = matProps.albedo;
+                    push.metallic = matProps.metallic;
+                    push.roughness = matProps.roughness;
+                    push.ao = matProps.ao;
+                    push.textureOffset = matProps.textureOffset;
+                    push.textureScale = matProps.textureScale;
+
+                    // Bind material descriptor set
+                    VkDescriptorSet materialDescriptorSet = matComp.material->getDescriptorSet();
+                    vkCmdBindDescriptorSets(
+                        frameInfo.commandBuffer,
+                        VK_PIPELINE_BIND_POINT_GRAPHICS,
+                        pipelineLayout,
+                        1, 1,
+                        &materialDescriptorSet,
+                        0, nullptr
+                    );
+                }
             } else {
-                // Use object color if no material
-                push.albedo = obj.color;
+                // Optional color fallback
+                if (gCoordinator.HasComponent<ColorComponent>(entity)) {
+                    push.albedo = gCoordinator.GetComponent<ColorComponent>(entity).color;
+                }
             }
 
             vkCmdPushConstants(
@@ -122,8 +138,9 @@ namespace knoxic {
                 sizeof(PushConstantData), 
                 &push
             );
-            obj.model->bind(frameInfo.commandBuffer);
-            obj.model->draw(frameInfo.commandBuffer);
+
+            modelComp.model->bind(frameInfo.commandBuffer);
+            modelComp.model->draw(frameInfo.commandBuffer);
         }
     }
 }

@@ -1,4 +1,4 @@
-#include "knoxic_game_object.hpp"
+#include "components.hpp"
 
 namespace knoxic {
 
