@@ -8,3 +8,5 @@ TODO.txt
 # folders
 .vscode
 build
+src/app/output
+src/app/output/app
