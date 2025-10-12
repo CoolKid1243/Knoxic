@@ -20,6 +20,9 @@ namespace knoxic {
         float ao{1.0f};
         glm::vec2 textureOffset{0.0f, 0.0f};
         glm::vec2 textureScale{1.0f, 1.0f};
+
+        glm::vec3 emissionColor{0.0f, 0.0f, 0.0f};
+        float emissionStrength{0.0f};
     };
 
     class KnoxicMaterial {
@@ -41,6 +44,10 @@ namespace knoxic {
         void loadNormalTexture(const std::string& filepath);
         void loadRoughnessMap(const std::string& filepath);
         void loadMetallicMap(const std::string& filepath);
+
+        void setEmissionColor(const glm::vec3& c) { properties.emissionColor = c; }
+        void setEmissionStrength(float s) { properties.emissionStrength = s; }
+        void setEmission(const glm::vec3& c, float s) { properties.emissionColor = c; properties.emissionStrength = s; }
 
         // Getters
         const MaterialProperties& getProperties() const { return properties; }
@@ -119,6 +126,18 @@ namespace knoxic {
         
         void setRoughness(float roughness) { 
             if (material) material->setRoughness(roughness); 
+        }
+
+        void setEmission(const glm::vec3& color, float strength) {
+            if (material) { material->setEmissionColor(color); material->setEmissionStrength(strength); }
+        }
+
+        void setEmissionColor(const glm::vec3& color) {
+            if (material) material->setEmissionColor(color);
+        }
+
+        void setEmissionStrength(float strength) {
+            if (material) material->setEmissionStrength(strength);
         }
     };
 }

@@ -36,5 +36,22 @@ namespace knoxic {
         std::shared_ptr<KnoxicModel> model{};
     };
 
+    struct PostProcessingComponent {
+        // Bloom
+        bool bloomEnabled{true};
+        float bloomThreshold{1.0f};   // HDR threshold
+        float bloomIntensity{0.7f};
+        int bloomIterations{5};       // blur passes
+
+        // Tonemapping / exposure / gamma
+        float exposure{1.0f};
+        float gamma{2.2f};
+
+        // Color adjustments
+        float vibrance{0.0f};
+        float saturation{0.0f};
+        float contrast{0.0f};
+    };
+
     using MaterialComponent = ::knoxic::MaterialComponent;
 }

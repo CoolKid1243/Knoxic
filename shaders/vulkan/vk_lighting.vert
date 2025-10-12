@@ -33,6 +33,8 @@ layout(push_constant) uniform Push {
     float ao;
     vec2 textureOffset;
     vec2 textureScale;
+    vec3 emissionColor;
+    float emissionStrength;
 } push;
 
 void main() {

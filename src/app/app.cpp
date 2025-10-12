@@ -45,6 +45,7 @@ namespace knoxic {
         gCoordinator.RegisterComponent<MaterialComponent>();
         gCoordinator.RegisterComponent<ColorComponent>();
         gCoordinator.RegisterComponent<PointLightComponent>();
+        gCoordinator.RegisterComponent<PostProcessingComponent>();
 
         renderableSystem = gCoordinator.RegisterSystem<RenderableSystem>();
         {
@@ -134,8 +135,21 @@ namespace knoxic {
         
         KnoxicCamera camera{};
 
-        auto viewerObject = KnoxicGameObject::createGameObject(knoxicDevice);
-        viewerObject.transform.translation = {0.0f, 0.0f, -2.5f}; // camera position on creation
+        // Create camera ECS entity
+        cameraEntity = gCoordinator.CreateEntity();
+        TransformComponent cameraTransform{};
+        cameraTransform.translation = {0.0f, 0.0f, -2.5f};
+        gCoordinator.AddComponent(cameraEntity, cameraTransform);
+        PostProcessingComponent postProc{};
+        postProc.bloomEnabled = true;
+        postProc.bloomIntensity = 0.7f;
+        postProc.exposure = 1.0f;
+        postProc.gamma = 2.2f;
+        gCoordinator.AddComponent(cameraEntity, postProc);
+        KnoxicGameObject viewerObject = KnoxicGameObject::createGameObject(knoxicDevice);
+        viewerObject.transform.translation = {0.0f, 0.0f, -2.5f};
+        viewerObject.transform.rotation = {0.0f, 0.0f, 0.0f};
+
         MouseMovementController cameraControllerMouse{};
         KeybordMovementController cameraControllerKeybord{cameraControllerMouse};
 
@@ -220,6 +234,10 @@ namespace knoxic {
             MaterialComponent smoothVaseMat{std::make_shared<KnoxicMaterial>(knoxicDevice)};
             smoothVaseMat.setRoughness(0.8f);
             smoothVaseMat.setMetallic(0.7f);
+            smoothVaseMat.setColor(glm::vec3(0.0f, 0.0f, 0.1f));
+            smoothVaseMat.setEmission(glm::vec3(0.0f, 0.5f, 1.0f), 10.0f);
+            // smoothVaseMat.setEmissionColor(glm::vec3(0.0f, 0.5f, 1.0f));
+            // smoothVaseMat.setEmissionStrength(10.0f);
             gCoordinator.AddComponent(smoothVase, smoothVaseMat);
 
             // Creates the floor entity

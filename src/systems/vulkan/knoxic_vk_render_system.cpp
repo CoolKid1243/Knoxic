@@ -24,6 +24,9 @@ namespace knoxic {
         float ao{1.0f};
         glm::vec2 textureOffset{0.0f, 0.0f};
         glm::vec2 textureScale{1.0f, 1.0f};
+
+        glm::vec3 emissionColor; 
+        float emissionStrength;
     };
 
     RenderSystem::RenderSystem(
@@ -112,6 +115,9 @@ namespace knoxic {
                     push.textureOffset = matProps.textureOffset;
                     push.textureScale = matProps.textureScale;
 
+                    push.emissionColor = matProps.emissionColor;
+                    push.emissionStrength = matProps.emissionStrength;
+
                     // Bind material descriptor set
                     VkDescriptorSet materialDescriptorSet = matComp.material->getDescriptorSet();
                     vkCmdBindDescriptorSets(
@@ -128,6 +134,10 @@ namespace knoxic {
                 if (gCoordinator.HasComponent<ColorComponent>(entity)) {
                     push.albedo = gCoordinator.GetComponent<ColorComponent>(entity).color;
                 }
+
+                // Default emission for non-material objects
+                push.emissionColor = glm::vec3(0.0f);
+                push.emissionStrength = 0.0f;
             }
 
             vkCmdPushConstants(

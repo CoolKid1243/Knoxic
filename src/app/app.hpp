@@ -16,7 +16,7 @@ namespace knoxic {
         static constexpr int HEIGHT = 758;
 
         App();
-         ~App();
+        ~App();
 
         App(const App &) = delete;
         App &operator=(const App &) = delete;
@@ -25,6 +25,8 @@ namespace knoxic {
 
     private:
         void loadGameObjects();
+
+        Entity cameraEntity;
 
         KnoxicWindow knoxicWindow{WIDTH, HEIGHT, "Knoxic"};
         KnoxicDevice knoxicDevice{knoxicWindow};
