@@ -38,6 +38,10 @@ namespace knoxic {
             .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 4000)
             .build();
 
+        // Create post-processing system
+        VkExtent2D extent = knoxicWindow.getExtent();
+        postProcessSystem = std::make_unique<PostProcessSystem>(knoxicDevice, extent);
+
         // Initialize ECS and register components/systems
         gCoordinator.Init();
         gCoordinator.RegisterComponent<TransformComponent>();
@@ -142,7 +146,9 @@ namespace knoxic {
         gCoordinator.AddComponent(cameraEntity, cameraTransform);
         PostProcessingComponent postProc{};
         postProc.bloomEnabled = true;
-        postProc.bloomIntensity = 0.7f;
+        postProc.bloomThreshold = 0.8f;
+        postProc.bloomIntensity = 1.2f;
+        postProc.bloomIterations = 5;
         postProc.exposure = 1.0f;
         postProc.gamma = 2.2f;
         gCoordinator.AddComponent(cameraEntity, postProc);
@@ -193,7 +199,6 @@ namespace knoxic {
                 uboBuffers[frameIndex]->writeToBuffer(&ubo);
                 uboBuffers[frameIndex]->flush();
 
-                // Render
                 knoxicRenderer.beginSwapChainRenderPass(commandBuffer);
                 renderSystem.renderGameObjects(frameInfo);
                 pointLightVkSystem.render(frameInfo);
@@ -235,9 +240,7 @@ namespace knoxic {
             smoothVaseMat.setRoughness(0.8f);
             smoothVaseMat.setMetallic(0.7f);
             smoothVaseMat.setColor(glm::vec3(0.0f, 0.0f, 0.1f));
-            smoothVaseMat.setEmission(glm::vec3(0.0f, 0.5f, 1.0f), 10.0f);
-            // smoothVaseMat.setEmissionColor(glm::vec3(0.0f, 0.5f, 1.0f));
-            // smoothVaseMat.setEmissionStrength(10.0f);
+            smoothVaseMat.setEmission(glm::vec3(0.0f, 0.5f, 1.0f), 5.0f);
             gCoordinator.AddComponent(smoothVase, smoothVaseMat);
 
             // Creates the floor entity

@@ -15,18 +15,18 @@
 namespace knoxic {
 
     struct PushConstantData {
-        glm::mat4 modelMatrix{1.0f};
-        glm::mat4 normalMatrix{1.0f};
+        alignas(16) glm::mat4 modelMatrix{1.0f};
+        alignas(16) glm::mat4 normalMatrix{1.0f};
         
-        glm::vec3 albedo{1.0f, 1.0f, 1.0f};
+        alignas(16) glm::vec3 albedo{1.0f, 1.0f, 1.0f};
         float metallic{0.0f};
         float roughness{0.5f};
         float ao{1.0f};
         glm::vec2 textureOffset{0.0f, 0.0f};
         glm::vec2 textureScale{1.0f, 1.0f};
 
-        glm::vec3 emissionColor; 
-        float emissionStrength;
+        alignas(16) glm::vec3 emissionColor{0.0f, 0.0f, 0.0f}; 
+        float emissionStrength{0.0f};
     };
 
     RenderSystem::RenderSystem(

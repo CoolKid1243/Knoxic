@@ -5,6 +5,7 @@
 #include "../graphics/vulkan/knoxic_vk_renderer.hpp"
 #include "../core/vulkan/knoxic_vk_descriptors.hpp"
 #include "../core/ecs/ecs_systems.hpp"
+#include "../systems/vulkan/knoxic_vk_post_process_system.hpp"
 
 #include <memory>
 
@@ -35,6 +36,7 @@ namespace knoxic {
         // Order of declarations matters
         std::unique_ptr<KnoxicDescriptorPool> globalPool{};
         std::unique_ptr<KnoxicDescriptorPool> materialPool{};
+        std::unique_ptr<PostProcessSystem> postProcessSystem{};
 
         // ECS systems
         std::shared_ptr<RenderableSystem> renderableSystem;
