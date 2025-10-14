@@ -555,6 +555,7 @@ namespace knoxic {
             pipelineConfig.pipelineLayout = brightnessExtractPipelineLayout;
             pipelineConfig.depthStencilInfo.depthTestEnable = VK_FALSE;
             pipelineConfig.depthStencilInfo.depthWriteEnable = VK_FALSE;
+            pipelineConfig.rasterizationInfo.cullMode = VK_CULL_MODE_NONE;
 
             brightnessExtractPipeline = std::make_unique<KnoxicPipeline>(
                 knoxicDevice,
@@ -589,6 +590,7 @@ namespace knoxic {
             pipelineConfig.pipelineLayout = blurPipelineLayout;
             pipelineConfig.depthStencilInfo.depthTestEnable = VK_FALSE;
             pipelineConfig.depthStencilInfo.depthWriteEnable = VK_FALSE;
+            pipelineConfig.rasterizationInfo.cullMode = VK_CULL_MODE_NONE;
 
             blurPipeline = std::make_unique<KnoxicPipeline>(
                 knoxicDevice,
@@ -605,6 +607,9 @@ namespace knoxic {
                 float exposure;
                 float gamma;
                 int bloomEnabled;
+                float contrast;
+                float saturation;
+                float vibrance;
             };
 
             VkPushConstantRange pushConstantRange{};
@@ -633,29 +638,29 @@ namespace knoxic {
         int frameIndex,
         const PostProcessingComponent& settings
     ) {
-        // Step 1: Extract bright pixels
+        VkRenderPassBeginInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        renderPassInfo.renderPass = bloomRenderPass;
+        renderPassInfo.framebuffer = bloomFramebuffers[0][frameIndex];
+        renderPassInfo.renderArea.offset = {0, 0};
+        renderPassInfo.renderArea.extent = {extent.width / 2, extent.height / 2};
+
+        VkClearValue clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
+        renderPassInfo.clearValueCount = 1;
+        renderPassInfo.pClearValues = &clearColor;
+
+        VkViewport viewport{};
+        viewport.x = 0.0f;
+        viewport.y = 0.0f;
+        viewport.width = static_cast<float>(extent.width / 2);
+        viewport.height = static_cast<float>(extent.height / 2);
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
+        VkRect2D scissor{{0, 0}, {extent.width / 2, extent.height / 2}};
+
+        // Step 1: Extract bright pixels (or clear to black if bloom disabled)
         if (settings.bloomEnabled) {
-            VkRenderPassBeginInfo renderPassInfo{};
-            renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-            renderPassInfo.renderPass = bloomRenderPass;
-            renderPassInfo.framebuffer = bloomFramebuffers[0][frameIndex];
-            renderPassInfo.renderArea.offset = {0, 0};
-            renderPassInfo.renderArea.extent = {extent.width / 2, extent.height / 2};
-
-            VkClearValue clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
-            renderPassInfo.clearValueCount = 1;
-            renderPassInfo.pClearValues = &clearColor;
-
             vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-            VkViewport viewport{};
-            viewport.x = 0.0f;
-            viewport.y = 0.0f;
-            viewport.width = static_cast<float>(extent.width / 2);
-            viewport.height = static_cast<float>(extent.height / 2);
-            viewport.minDepth = 0.0f;
-            viewport.maxDepth = 1.0f;
-            VkRect2D scissor{{0, 0}, {extent.width / 2, extent.height / 2}};
             vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
             vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
@@ -712,6 +717,10 @@ namespace knoxic {
                     vkCmdEndRenderPass(commandBuffer);
                 }
             }
+        } else {
+            // Clear bloom buffer to black and transition to correct layout
+            vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+            vkCmdEndRenderPass(commandBuffer);
         }
         
     }
@@ -730,6 +739,7 @@ namespace knoxic {
             pipelineConfig.pipelineLayout = postProcessPipelineLayout;
             pipelineConfig.depthStencilInfo.depthTestEnable = VK_FALSE;
             pipelineConfig.depthStencilInfo.depthWriteEnable = VK_FALSE;
+            pipelineConfig.rasterizationInfo.cullMode = VK_CULL_MODE_NONE; // Disable culling for fullscreen triangle
 
             postProcessPipeline = std::make_unique<KnoxicPipeline>(
                 knoxicDevice,
@@ -738,18 +748,6 @@ namespace knoxic {
                 pipelineConfig
             );
         }
-
-        // Set viewport and scissor for full-screen render
-        VkViewport viewport{};
-        viewport.x = 0.0f;
-        viewport.y = 0.0f;
-        viewport.width = static_cast<float>(extent.width);
-        viewport.height = static_cast<float>(extent.height);
-        viewport.minDepth = 0.0f;
-        viewport.maxDepth = 1.0f;
-        VkRect2D scissor{{0, 0}, extent};
-        vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
-        vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
         // Bind pipeline and render full-screen quad
         postProcessPipeline->bind(commandBuffer);
@@ -761,6 +759,9 @@ namespace knoxic {
             float exposure;
             float gamma;
             int bloomEnabled;
+            float contrast;
+            float saturation;
+            float vibrance;
         };
 
         PostProcessPushConstants pushConstants{};
@@ -768,6 +769,9 @@ namespace knoxic {
         pushConstants.exposure = settings.exposure;
         pushConstants.gamma = settings.gamma;
         pushConstants.bloomEnabled = settings.bloomEnabled ? 1 : 0;
+        pushConstants.contrast = settings.contrast;
+        pushConstants.saturation = settings.saturation;
+        pushConstants.vibrance = settings.vibrance;
 
         vkCmdPushConstants(commandBuffer, postProcessPipelineLayout,
             VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PostProcessPushConstants), &pushConstants);

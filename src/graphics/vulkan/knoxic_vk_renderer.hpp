@@ -19,6 +19,7 @@ namespace knoxic {
         KnoxicRenderer &operator=(const KnoxicRenderer &) = delete;
 
         VkRenderPass getSwapChainRenderPass() const { return knoxicSwapChain->getRenderPass(); }
+        VkExtent2D getSwapChainExtent() const { return knoxicSwapChain->getSwapChainExtent(); }
         float getAspectRatio() const { return knoxicSwapChain->extentAspectRatio(); }
         bool isFrameInProgress() const { return isFrameStarted; }
 

@@ -39,7 +39,7 @@ namespace knoxic {
             .build();
 
         // Create post-processing system
-        VkExtent2D extent = knoxicWindow.getExtent();
+        VkExtent2D extent = knoxicRenderer.getSwapChainExtent();
         postProcessSystem = std::make_unique<PostProcessSystem>(knoxicDevice, extent);
 
         // Initialize ECS and register components/systems
@@ -124,7 +124,7 @@ namespace knoxic {
 
         RenderSystem renderSystem {
             knoxicDevice,
-            knoxicRenderer.getSwapChainRenderPass(),
+            postProcessSystem->getHDRRenderPass(),
             globalSetLayout->getDescriptorSetLayout(),
             materialSetLayout->getDescriptorSetLayout(),
             renderableSystem
@@ -132,7 +132,7 @@ namespace knoxic {
         
         PointLightSystem pointLightVkSystem {
             knoxicDevice,
-            knoxicRenderer.getSwapChainRenderPass(),
+            postProcessSystem->getHDRRenderPass(),
             globalSetLayout->getDescriptorSetLayout(),
             pointLightSystem
         };
@@ -150,7 +150,10 @@ namespace knoxic {
         postProc.bloomIntensity = 1.2f;
         postProc.bloomIterations = 5;
         postProc.exposure = 1.0f;
-        postProc.gamma = 2.2f;
+        postProc.gamma = 1.65f;
+        postProc.contrast = 0.0f;
+        postProc.saturation = 0.0f;
+        postProc.vibrance = 0.0f;
         gCoordinator.AddComponent(cameraEntity, postProc);
         KnoxicGameObject viewerObject = KnoxicGameObject::createGameObject(knoxicDevice);
         viewerObject.transform.translation = {0.0f, 0.0f, -2.5f};
@@ -160,6 +163,7 @@ namespace knoxic {
         KeybordMovementController cameraControllerKeybord{cameraControllerMouse};
 
         auto currentTime = std::chrono::high_resolution_clock::now();
+        VkExtent2D previousExtent = knoxicRenderer.getSwapChainExtent();
 
         cameraControllerMouse.init(knoxicWindow.getGLFWwindow());
 
@@ -175,9 +179,16 @@ namespace knoxic {
             camera.setViewYXZ(viewerObject.transform.translation, viewerObject.transform.rotation);
 
             float aspect = knoxicRenderer.getAspectRatio();
-            camera.setPerspectiveProjection(glm::radians(60.0f), aspect, 0.01f, 100.0f);
+            camera.setPerspectiveProjection(glm::radians(75.0f), aspect, 0.01f, 100.0f);
             
             if (auto commandBuffer = knoxicRenderer.beginFrame()) {
+                // Check if window was resized and recreate post-processing resources
+                VkExtent2D currentExtent = knoxicRenderer.getSwapChainExtent();
+                if (currentExtent.width != previousExtent.width || currentExtent.height != previousExtent.height) {
+                    postProcessSystem->recreate(currentExtent);
+                    previousExtent = currentExtent;
+                }
+
                 int frameIndex = knoxicRenderer.getFrameIndex();
                 FrameInfo frameInfo {
                     frameIndex,
@@ -199,9 +210,50 @@ namespace knoxic {
                 uboBuffers[frameIndex]->writeToBuffer(&ubo);
                 uboBuffers[frameIndex]->flush();
 
-                knoxicRenderer.beginSwapChainRenderPass(commandBuffer);
+                // Render scene to HDR buffer
+                VkRenderPassBeginInfo hdrRenderPassInfo{};
+                hdrRenderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+                hdrRenderPassInfo.renderPass = postProcessSystem->getHDRRenderPass();
+                hdrRenderPassInfo.framebuffer = postProcessSystem->getHDRFramebuffer(frameIndex);
+                hdrRenderPassInfo.renderArea.offset = {0, 0};
+                hdrRenderPassInfo.renderArea.extent = knoxicRenderer.getSwapChainExtent();
+
+                std::array<VkClearValue, 2> clearValues{};
+                clearValues[0].color = {{0.01f, 0.01f, 0.01f, 1.0f}};
+                clearValues[1].depthStencil = {1.0f, 0};
+                hdrRenderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+                hdrRenderPassInfo.pClearValues = clearValues.data();
+
+                vkCmdBeginRenderPass(commandBuffer, &hdrRenderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+                
+                // Set viewport and scissor for HDR rendering
+                VkViewport viewport{};
+                viewport.x = 0.0f;
+                viewport.y = 0.0f;
+                viewport.width = static_cast<float>(knoxicRenderer.getSwapChainExtent().width);
+                viewport.height = static_cast<float>(knoxicRenderer.getSwapChainExtent().height);
+                viewport.minDepth = 0.0f;
+                viewport.maxDepth = 1.0f;
+                VkRect2D scissor{{0, 0}, knoxicRenderer.getSwapChainExtent()};
+                vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+                vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+                
                 renderSystem.renderGameObjects(frameInfo);
                 pointLightVkSystem.render(frameInfo);
+                vkCmdEndRenderPass(commandBuffer);
+
+                // Apply post-processing
+                auto& postProcSettings = gCoordinator.GetComponent<PostProcessingComponent>(cameraEntity);
+                postProcessSystem->renderPostProcess(commandBuffer, frameIndex, postProcSettings);
+
+                // Render final composite to swapchain
+                knoxicRenderer.beginSwapChainRenderPass(commandBuffer);
+                postProcessSystem->renderFinalComposite(
+                    commandBuffer,
+                    knoxicRenderer.getSwapChainRenderPass(),
+                    frameIndex,
+                    postProcSettings
+                );
                 knoxicRenderer.endSwapChainRenderPass(commandBuffer);
                 knoxicRenderer.endFrame();
             }
@@ -239,8 +291,6 @@ namespace knoxic {
             MaterialComponent smoothVaseMat{std::make_shared<KnoxicMaterial>(knoxicDevice)};
             smoothVaseMat.setRoughness(0.8f);
             smoothVaseMat.setMetallic(0.7f);
-            smoothVaseMat.setColor(glm::vec3(0.0f, 0.0f, 0.1f));
-            smoothVaseMat.setEmission(glm::vec3(0.0f, 0.5f, 1.0f), 5.0f);
             gCoordinator.AddComponent(smoothVase, smoothVaseMat);
 
             // Creates the floor entity
@@ -297,6 +347,8 @@ namespace knoxic {
             MaterialComponent vaseMat{std::make_shared<KnoxicMaterial>(knoxicDevice)};
             vaseMat.setRoughness(0.8f);
             vaseMat.setMetallic(0.7f);
+            vaseMat.setColor(glm::vec3(0.0f, 0.0f, 0.1f));
+            vaseMat.setEmission(glm::vec3(0.0f, 0.5f, 1.0f), 5.0f);
             gCoordinator.AddComponent(vase, vaseMat);
             
             // Creates the floor entity
