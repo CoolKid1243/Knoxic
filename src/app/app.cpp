@@ -10,6 +10,8 @@
 #include "../core/vulkan/knoxic_vk_buffer.hpp"
 #include "../systems/vulkan/knoxic_vk_render_system.hpp"
 #include "../systems/vulkan/knoxic_vk_point_light_system.hpp"
+#include "../systems/vulkan/knoxic_vk_spot_light_system.hpp"
+#include "../systems/vulkan/knoxic_vk_directional_light_system.hpp"
 #include "../systems/vulkan/knoxic_vk_material_system.hpp"
 #include "../core/ecs/coordinator_instance.hpp"
 #include "../core/ecs/components.hpp"
@@ -49,6 +51,8 @@ namespace knoxic {
         gCoordinator.RegisterComponent<MaterialComponent>();
         gCoordinator.RegisterComponent<ColorComponent>();
         gCoordinator.RegisterComponent<PointLightComponent>();
+        gCoordinator.RegisterComponent<SpotLightComponent>();
+        gCoordinator.RegisterComponent<DirectionalLightComponent>();
         gCoordinator.RegisterComponent<PostProcessingComponent>();
 
         renderableSystem = gCoordinator.RegisterSystem<RenderableSystem>();
@@ -65,6 +69,22 @@ namespace knoxic {
             signature.set(gCoordinator.GetComponentType<TransformComponent>());
             signature.set(gCoordinator.GetComponentType<PointLightComponent>());
             gCoordinator.SetSystemSignature<PointLightECSSystem>(signature);
+        }
+
+        spotLightSystem = gCoordinator.RegisterSystem<SpotLightECSSystem>();
+        {
+            Signature signature;
+            signature.set(gCoordinator.GetComponentType<TransformComponent>());
+            signature.set(gCoordinator.GetComponentType<SpotLightComponent>());
+            gCoordinator.SetSystemSignature<SpotLightECSSystem>(signature);
+        }
+
+        directionalLightSystem = gCoordinator.RegisterSystem<DirectionalLightECSSystem>();
+        {
+            Signature signature;
+            signature.set(gCoordinator.GetComponentType<TransformComponent>());
+            signature.set(gCoordinator.GetComponentType<DirectionalLightComponent>());
+            gCoordinator.SetSystemSignature<DirectionalLightECSSystem>(signature);
         }
 
         loadGameObjects(); 
@@ -137,6 +157,20 @@ namespace knoxic {
             pointLightSystem
         };
         
+        SpotLightSystem spotLightVkSystem {
+            knoxicDevice,
+            postProcessSystem->getHDRRenderPass(),
+            globalSetLayout->getDescriptorSetLayout(),
+            spotLightSystem
+        };
+        
+        DirectionalLightSystem directionalLightVkSystem {
+            knoxicDevice,
+            postProcessSystem->getHDRRenderPass(),
+            globalSetLayout->getDescriptorSetLayout(),
+            directionalLightSystem
+        };
+        
         KnoxicCamera camera{};
 
         // Create camera ECS entity
@@ -207,6 +241,8 @@ namespace knoxic {
                 ubo.view = camera.getView();
                 ubo.inverseView = camera.getInverseView();
                 pointLightVkSystem.update(frameInfo, ubo);
+                spotLightVkSystem.update(frameInfo, ubo);
+                directionalLightVkSystem.update(frameInfo, ubo);
                 uboBuffers[frameIndex]->writeToBuffer(&ubo);
                 uboBuffers[frameIndex]->flush();
 
@@ -240,6 +276,8 @@ namespace knoxic {
                 
                 renderSystem.renderGameObjects(frameInfo);
                 pointLightVkSystem.render(frameInfo);
+                spotLightVkSystem.render(frameInfo);
+                directionalLightVkSystem.render(frameInfo);
                 vkCmdEndRenderPass(commandBuffer);
 
                 // Apply post-processing
@@ -373,6 +411,20 @@ namespace knoxic {
             gCoordinator.AddComponent(pointLight1, pl1T);
             gCoordinator.AddComponent(pointLight1, PointLightComponent{0.5f});
             gCoordinator.AddComponent(pointLight1, ColorComponent{glm::vec3{1.0f, 1.0f, 1.0f}});
+
+            // Creates a spot light entity
+            Entity spotLight1 = gCoordinator.CreateEntity();
+            TransformComponent sl1T{};
+            sl1T.translation = {10.0f, -2.0f, 0.0f};
+            sl1T.rotation = {glm::radians(90.0f), 0.0f, 0.0f};
+            sl1T.scale = glm::vec3(0.08f);
+            gCoordinator.AddComponent(spotLight1, sl1T);
+            SpotLightComponent sl1C{};
+            sl1C.lightIntensity = 2.0f;
+            sl1C.innerCutoff = 10.5f;
+            sl1C.outerCutoff = 25.0f;
+            gCoordinator.AddComponent(spotLight1, sl1C);
+            gCoordinator.AddComponent(spotLight1, ColorComponent{glm::vec3{0.0f, 1.0f, 1.0f}});
         }
 
         // -- Third scene --
@@ -446,6 +498,32 @@ namespace knoxic {
             gCoordinator.AddComponent(pointLight2, pl2T);
             gCoordinator.AddComponent(pointLight2, PointLightComponent{0.8f});
             gCoordinator.AddComponent(pointLight2, ColorComponent{glm::vec3{1.0f, 1.0f, 1.0f}});
+
+            // Creates a directional light entity
+            // Entity dirLight1 = gCoordinator.CreateEntity();
+            // TransformComponent dl1T{};
+            // dl1T.translation = {-10.0f, -3.0f, 0.0f}; // Position for visualization
+            // dl1T.rotation = {glm::radians(30.0f), glm::radians(-45.0f), 0.0f}; // Direction of light
+            // dl1T.scale = glm::vec3(0.1f);
+            // gCoordinator.AddComponent(dirLight1, dl1T);
+            // DirectionalLightComponent dl1C{};
+            // dl1C.lightIntensity = 0.3f;
+            // gCoordinator.AddComponent(dirLight1, dl1C);
+            // gCoordinator.AddComponent(dirLight1, ColorComponent{glm::vec3{1.0f, 0.9f, 0.7f}});
+
+            // Creates a spot light entity pointing at helmet
+            Entity spotLight2 = gCoordinator.CreateEntity();
+            TransformComponent sl2T{};
+            sl2T.translation = {-12.0f, -2.0f, -2.0f};
+            sl2T.rotation = {glm::radians(135.0f), glm::radians(45.0f), glm::radians(90.0f)};
+            sl2T.scale = glm::vec3(0.08f);
+            gCoordinator.AddComponent(spotLight2, sl2T);
+            SpotLightComponent sl2C{};
+            sl2C.lightIntensity = 3.0f;
+            sl2C.innerCutoff = 15.0f;
+            sl2C.outerCutoff = 25.0f;
+            gCoordinator.AddComponent(spotLight2, sl2C);
+            gCoordinator.AddComponent(spotLight2, ColorComponent{glm::vec3{1.0f, 0.5f, 0.0f}});
         }
     }
 }

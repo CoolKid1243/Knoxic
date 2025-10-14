@@ -5,3 +5,5 @@
 // Minimal ECS system types used to query entities for rendering and lighting
 struct RenderableSystem : public System {};
 struct PointLightECSSystem : public System {};
+struct SpotLightECSSystem : public System {};
+struct DirectionalLightECSSystem : public System {};

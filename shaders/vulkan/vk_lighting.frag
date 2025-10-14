@@ -12,6 +12,21 @@ struct PointLight {
     vec4 color; // w is intensity
 };
 
+struct SpotLight {
+    vec4 position; // ignore w
+    vec4 direction; // ignore w
+    vec4 color; // w is intensity
+    float innerCutoff; // cos of inner angle
+    float outerCutoff; // cos of outer angle
+    float padding1;
+    float padding2;
+};
+
+struct DirectionalLight {
+    vec4 direction; // ignore w
+    vec4 color; // w is intensity
+};
+
 layout(set = 0, binding = 0) uniform GlobalUbo {
     mat4 projection;
     mat4 view;
@@ -19,6 +34,11 @@ layout(set = 0, binding = 0) uniform GlobalUbo {
     vec4 ambientLightColor; // w is intensity
     PointLight pointLights[1000];
     int numLights;
+    int numSpotLights;
+    int numDirectionalLights;
+    int padding;
+    SpotLight spotLights[1000];
+    DirectionalLight directionalLights[1000];
 } ubo;
 
 // Material textures
@@ -80,6 +100,7 @@ void main() {
     vec3 cameraPosWorld = ubo.inverseView[3].xyz;
     vec3 viewDirection = normalize(cameraPosWorld - fragPosWorld);
 
+    // Point lights
     for (int i = 0; i < ubo.numLights; i++) {
         PointLight light = ubo.pointLights[i];
         vec3 directionToLight = light.position.xyz - fragPosWorld;
@@ -88,6 +109,54 @@ void main() {
 
         float cosAngleIncidence = max(dot(surfaceNormal, directionToLight), 0);
         vec3 intensity = light.color.xyz * light.color.w * attenuation;
+
+        diffuseLight += intensity * cosAngleIncidence;
+
+        // Specular
+        vec3 halfAngle = normalize(directionToLight + viewDirection);
+        float blinnTerm = clamp(dot(surfaceNormal, halfAngle), 0, 1);
+        float shininess = mix(128.0, 8.0, push.roughness);
+        blinnTerm = pow(blinnTerm, shininess);
+
+        vec3 specularColor = mix(vec3(0.04), materialColor, push.metallic);
+        specularLight += intensity * blinnTerm * specularColor;
+    }
+
+    // Spot lights
+    for (int i = 0; i < ubo.numSpotLights; i++) {
+        SpotLight light = ubo.spotLights[i];
+        vec3 directionToLight = light.position.xyz - fragPosWorld;
+        float distance = length(directionToLight);
+        float attenuation = 1.0 / (distance * distance);
+        directionToLight = normalize(directionToLight);
+
+        // Calculate spotlight cone
+        float theta = dot(directionToLight, normalize(-light.direction.xyz));
+        float epsilon = light.innerCutoff - light.outerCutoff;
+        float spotIntensity = clamp((theta - light.outerCutoff) / epsilon, 0.0, 1.0);
+
+        float cosAngleIncidence = max(dot(surfaceNormal, directionToLight), 0);
+        vec3 intensity = light.color.xyz * light.color.w * attenuation * spotIntensity;
+
+        diffuseLight += intensity * cosAngleIncidence;
+
+        // Specular
+        vec3 halfAngle = normalize(directionToLight + viewDirection);
+        float blinnTerm = clamp(dot(surfaceNormal, halfAngle), 0, 1);
+        float shininess = mix(128.0, 8.0, push.roughness);
+        blinnTerm = pow(blinnTerm, shininess);
+
+        vec3 specularColor = mix(vec3(0.04), materialColor, push.metallic);
+        specularLight += intensity * blinnTerm * specularColor;
+    }
+
+    // Directional lights
+    for (int i = 0; i < ubo.numDirectionalLights; i++) {
+        DirectionalLight light = ubo.directionalLights[i];
+        vec3 directionToLight = normalize(-light.direction.xyz);
+
+        float cosAngleIncidence = max(dot(surfaceNormal, directionToLight), 0);
+        vec3 intensity = light.color.xyz * light.color.w;
 
         diffuseLight += intensity * cosAngleIncidence;
 

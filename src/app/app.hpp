@@ -41,5 +41,7 @@ namespace knoxic {
         // ECS systems
         std::shared_ptr<RenderableSystem> renderableSystem;
         std::shared_ptr<PointLightECSSystem> pointLightSystem;
+        std::shared_ptr<SpotLightECSSystem> spotLightSystem;
+        std::shared_ptr<DirectionalLightECSSystem> directionalLightSystem;
     };
 }

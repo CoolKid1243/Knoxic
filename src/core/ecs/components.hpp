@@ -31,6 +31,18 @@ namespace knoxic {
         float lightIntensity = 1.0f;
     };
 
+    // Tag/data for spot lights
+    struct SpotLightComponent {
+        float lightIntensity = 1.0f;
+        float innerCutoff = 12.5f; // in degrees
+        float outerCutoff = 17.5f; // in degrees
+    };
+
+    // Tag/data for directional lights
+    struct DirectionalLightComponent {
+        float lightIntensity = 1.0f;
+    };
+
     // Reference to a renderable model
     struct ModelComponent {
         std::shared_ptr<KnoxicModel> model{};

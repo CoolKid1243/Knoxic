@@ -33,7 +33,11 @@ void main() {
     
     // Temporary? looks cool
     float cosDis = 0.5 * (cos(dis * M_PI * 1.5) + 1.0);
-    outColor = vec4(push.color.xyz * cosDis, cosDis);
+    // Clamp to avoid bloom - keep brightness well below threshold
+    vec3 finalColor = push.color.xyz * cosDis;
+    // Clamp each channel and also clamp overall brightness to 0.4 max
+    finalColor = min(finalColor, vec3(0.4));
+    outColor = vec4(finalColor, cosDis);
 
     // Without the white center
     // float cosDis = 0.5 * (cos(dis * M_PI) + 1.0);
