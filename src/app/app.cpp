@@ -305,6 +305,21 @@ namespace knoxic {
 
         // -- First scene --
         {
+            // Creates the bloom text entity
+            knoxicModel = KnoxicModel::createModelFromFile(knoxicDevice, "res/models/bloom_text.fbx");
+            Entity bloomText = gCoordinator.CreateEntity();
+            TransformComponent bloomTextTransform{};
+            bloomTextTransform.translation = {-1.5f, -1.0f, 4.5f};
+            bloomTextTransform.rotation = {glm::radians(180.0f), 0.0f, 0.0f};
+            gCoordinator.AddComponent(bloomText, bloomTextTransform);
+            gCoordinator.AddComponent(bloomText, ModelComponent{knoxicModel});
+            MaterialComponent bloomTextMat{std::make_shared<KnoxicMaterial>(knoxicDevice)};
+            bloomTextMat.setRoughness(0.8f);
+            bloomTextMat.setMetallic(0.7f);
+            bloomTextMat.setColor(glm::vec3(0.0f, 0.0f, 0.1f));
+            bloomTextMat.setEmission(glm::vec3(0.0f, 0.5f, 1.0f), 5.0f);
+            gCoordinator.AddComponent(bloomText, bloomTextMat);
+
             // Creates the flat vase entity
             knoxicModel = KnoxicModel::createModelFromFile(knoxicDevice, "res/models/flat_vase.obj");
             Entity flatVase = gCoordinator.CreateEntity();
@@ -385,8 +400,6 @@ namespace knoxic {
             MaterialComponent vaseMat{std::make_shared<KnoxicMaterial>(knoxicDevice)};
             vaseMat.setRoughness(0.8f);
             vaseMat.setMetallic(0.7f);
-            vaseMat.setColor(glm::vec3(0.0f, 0.0f, 0.1f));
-            vaseMat.setEmission(glm::vec3(0.0f, 0.5f, 1.0f), 5.0f);
             gCoordinator.AddComponent(vase, vaseMat);
             
             // Creates the floor entity
@@ -411,20 +424,6 @@ namespace knoxic {
             gCoordinator.AddComponent(pointLight1, pl1T);
             gCoordinator.AddComponent(pointLight1, PointLightComponent{0.5f});
             gCoordinator.AddComponent(pointLight1, ColorComponent{glm::vec3{1.0f, 1.0f, 1.0f}});
-
-            // Creates a spot light entity
-            Entity spotLight1 = gCoordinator.CreateEntity();
-            TransformComponent sl1T{};
-            sl1T.translation = {10.0f, -2.0f, 0.0f};
-            sl1T.rotation = {glm::radians(90.0f), 0.0f, 0.0f};
-            sl1T.scale = glm::vec3(0.08f);
-            gCoordinator.AddComponent(spotLight1, sl1T);
-            SpotLightComponent sl1C{};
-            sl1C.lightIntensity = 2.0f;
-            sl1C.innerCutoff = 10.5f;
-            sl1C.outerCutoff = 25.0f;
-            gCoordinator.AddComponent(spotLight1, sl1C);
-            gCoordinator.AddComponent(spotLight1, ColorComponent{glm::vec3{0.0f, 1.0f, 1.0f}});
         }
 
         // -- Third scene --
