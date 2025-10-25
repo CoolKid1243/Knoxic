@@ -78,8 +78,6 @@ else()
     message(STATUS "Using Assimp lib at: ${ASSIMP_LIBRARIES}")
 endif()
 
-include_directories(external)
-
 if (NOT STBIMAGE_PATH)
     message(STATUS "STBIMAGE_PATH not specified in .env.cmake, using external/stbimage")
     set(STBIMAGE_PATH external/stbimage)
@@ -92,6 +90,29 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/build")
+
+set(IMGUI_DIR "${PROJECT_SOURCE_DIR}/external/imgui")
+set(IMGUIZMO_DIR "${PROJECT_SOURCE_DIR}/external/ImGuizmo-1.83")
+
+file(GLOB IMGUI_SOURCES
+    ${IMGUI_DIR}/*.cpp
+    ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp
+    ${IMGUI_DIR}/backends/imgui_impl_vulkan.cpp
+)
+
+file(GLOB IMGUIZMO_SOURCES
+    ${IMGUIZMO_DIR}/*.cpp
+)
+
+add_library(imgui STATIC ${IMGUI_SOURCES} ${IMGUIZMO_SOURCES})
+
+target_include_directories(imgui PUBLIC
+    ${PROJECT_SOURCE_DIR}/external
+    ${GLFW_INCLUDE_DIRS}
+    ${Vulkan_INCLUDE_DIRS}
+)
+
+target_link_libraries(imgui PUBLIC glfw ${Vulkan_LIBRARIES})
 
 if (WIN32)
     message(STATUS "CREATING BUILD FOR WINDOWS")
@@ -112,6 +133,8 @@ if (WIN32)
         ${GLFW_INCLUDE_DIRS}
         ${GLM_PATH}
         ${ASSIMP_INCLUDE_DIRS}
+        ${IMGUI_DIR}
+        ${IMGUIZMO_DIR}
     )
 
     target_link_directories(${PROJECT_NAME} PUBLIC
@@ -119,11 +142,12 @@ if (WIN32)
         ${GLFW_LIB}
     )
 
-    if (DEFINED ASSIMP_PATH)
-        target_link_libraries(${PROJECT_NAME} glfw3 vulkan-1 ${ASSIMP_LIBRARIES})
-    else()
-        target_link_libraries(${PROJECT_NAME} glfw3 vulkan-1 ${ASSIMP_LIBRARIES})
-    endif()
+    target_link_libraries(${PROJECT_NAME}
+        glfw3
+        vulkan-1
+        ${ASSIMP_LIBRARIES}
+        imgui
+    )
 
 elseif (UNIX)
     message(STATUS "CREATING BUILD FOR UNIX")
@@ -131,13 +155,16 @@ elseif (UNIX)
     target_include_directories(${PROJECT_NAME} PUBLIC
         ${PROJECT_SOURCE_DIR}/src
         ${STBIMAGE_PATH}
+        ${IMGUI_DIR}
+        ${IMGUIZMO_DIR}
     )
 
-    if (DEFINED ASSIMP_PATH)
-        target_link_libraries(${PROJECT_NAME} glfw ${Vulkan_LIBRARIES} ${ASSIMP_LIBRARIES})
-    else()
-        target_link_libraries(${PROJECT_NAME} glfw ${Vulkan_LIBRARIES} ${ASSIMP_LIBRARIES})
-    endif()
+    target_link_libraries(${PROJECT_NAME}
+        glfw
+        ${Vulkan_LIBRARIES}
+        ${ASSIMP_LIBRARIES}
+        imgui
+    )
 endif()
 
 find_program(GLSL_VALIDATOR glslangValidator HINTS 

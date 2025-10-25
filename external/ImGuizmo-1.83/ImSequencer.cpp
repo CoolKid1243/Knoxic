@@ -418,7 +418,7 @@ namespace ImSequencer
          // moving
          if (/*backgroundRect.Contains(io.MousePos) && */movingEntry >= 0)
          {
-            ImGui::CaptureMouseFromApp();
+            // Removed in newer ImGui versions — no longer needed
             int diffFrame = int((cx - movingPos) / framePixelWidth);
             if (std::abs(diffFrame) > 0)
             {
