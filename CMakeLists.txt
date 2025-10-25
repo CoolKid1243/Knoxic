@@ -101,13 +101,16 @@ file(GLOB IMGUI_SOURCES
 )
 
 file(GLOB IMGUIZMO_SOURCES
-    ${IMGUIZMO_DIR}/*.cpp
+    ${IMGUIZMO_DIR}/ImGuizmoWrapper.cpp
 )
 
 add_library(imgui STATIC ${IMGUI_SOURCES} ${IMGUIZMO_SOURCES})
 
 target_include_directories(imgui PUBLIC
     ${PROJECT_SOURCE_DIR}/external
+    ${IMGUI_DIR}
+    ${IMGUI_DIR}/backends
+    ${IMGUIZMO_DIR}
     ${GLFW_INCLUDE_DIRS}
     ${Vulkan_INCLUDE_DIRS}
 )
