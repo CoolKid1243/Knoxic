@@ -92,7 +92,7 @@ target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
 set_property(TARGET ${PROJECT_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/build")
 
 set(IMGUI_DIR "${PROJECT_SOURCE_DIR}/external/imgui")
-set(IMGUIZMO_DIR "${PROJECT_SOURCE_DIR}/external/ImGuizmo-1.83")
+set(IMGUIZMO_DIR "${PROJECT_SOURCE_DIR}/external/ImGuizmo")
 
 file(GLOB IMGUI_SOURCES
     ${IMGUI_DIR}/*.cpp

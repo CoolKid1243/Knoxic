@@ -185,9 +185,6 @@ namespace knoxic {
         postProc.bloomIterations = 5;
         postProc.exposure = 1.0f;
         postProc.gamma = 1.65f;
-        postProc.contrast = 0.0f;
-        postProc.saturation = 0.0f;
-        postProc.vibrance = 0.0f;
         gCoordinator.AddComponent(cameraEntity, postProc);
         KnoxicGameObject viewerObject = KnoxicGameObject::createGameObject(knoxicDevice);
         viewerObject.transform.translation = {0.0f, 0.0f, -2.5f};
@@ -302,6 +299,18 @@ namespace knoxic {
 
     void App::loadGameObjects() {
         std::shared_ptr<KnoxicModel> knoxicModel;
+
+        // Creates a directional light entity
+        // Entity dirLight1 = gCoordinator.CreateEntity();
+        // TransformComponent dl1T{};
+        // dl1T.translation = {0.0f, -3.0f, 0.0f};
+        // dl1T.rotation = {glm::radians(30.0f), glm::radians(-90.0f), 0.0f}; // Direction of light
+        // dl1T.scale = glm::vec3(0.1f);
+        // gCoordinator.AddComponent(dirLight1, dl1T);
+        // DirectionalLightComponent dl1C{};
+        // dl1C.lightIntensity = 0.3f;
+        // gCoordinator.AddComponent(dirLight1, dl1C);
+        // gCoordinator.AddComponent(dirLight1, ColorComponent{glm::vec3{1.0f, 0.9f, 0.7f}});
 
         // -- First scene --
         {
@@ -497,18 +506,6 @@ namespace knoxic {
             gCoordinator.AddComponent(pointLight2, pl2T);
             gCoordinator.AddComponent(pointLight2, PointLightComponent{0.8f});
             gCoordinator.AddComponent(pointLight2, ColorComponent{glm::vec3{1.0f, 1.0f, 1.0f}});
-
-            // Creates a directional light entity
-            // Entity dirLight1 = gCoordinator.CreateEntity();
-            // TransformComponent dl1T{};
-            // dl1T.translation = {-10.0f, -3.0f, 0.0f}; // Position for visualization
-            // dl1T.rotation = {glm::radians(30.0f), glm::radians(-45.0f), 0.0f}; // Direction of light
-            // dl1T.scale = glm::vec3(0.1f);
-            // gCoordinator.AddComponent(dirLight1, dl1T);
-            // DirectionalLightComponent dl1C{};
-            // dl1C.lightIntensity = 0.3f;
-            // gCoordinator.AddComponent(dirLight1, dl1C);
-            // gCoordinator.AddComponent(dirLight1, ColorComponent{glm::vec3{1.0f, 0.9f, 0.7f}});
 
             // Creates a spot light entity pointing at helmet
             Entity spotLight2 = gCoordinator.CreateEntity();
