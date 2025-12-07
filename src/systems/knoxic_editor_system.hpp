@@ -11,6 +11,7 @@
 #include "../input/keybord_movement_controller.hpp"
 
 #include <imgui/imgui.h>
+#include <ImGuizmo/ImGuizmo.h>
 #include <GLFW/glfw3.h>
 
 namespace knoxic {
@@ -30,7 +31,7 @@ namespace knoxic {
         );
 
         void update(GLFWwindow* glfwWindow, float frameTime);
-        void renderUI();
+        void renderUI(const KnoxicCamera& camera);
         bool isEditorMode() const { return mEditorMode; }
         Entity getSelectedEntity() const { return mSelectedEntity; }
         void setSelectedEntity(Entity entity) { mSelectedEntity = entity; }
@@ -40,10 +41,16 @@ namespace knoxic {
 
     private:
         void handleInput(GLFWwindow* glfwWindow);
+        void setupDefaultStyle();
+        void renderMenuBar();
+        void renderToolbar();
         void renderHierarchyWindow();
         void renderSceneWindow();
+        void renderSceneWindowWithGizmo(const KnoxicCamera& camera);
         void renderInspectorWindow();
-        void renderEntityInHierarchy(Entity entity, const std::string& name);
+        void renderProjectWindow();
+        void renderConsoleWindow();
+        std::string getEntityDisplayName(Entity entity);
 
         KnoxicWindow& mWindow;
         KnoxicDevice& mDevice;
@@ -61,10 +68,16 @@ namespace knoxic {
         bool mShowHierarchy = true;
         bool mShowScene = true;
         bool mShowInspector = true;
+        bool mShowProject = true;
+        bool mShowConsole = false;
+        bool mStyleInitialized = false;
 
         // Scene window rendering
         ImVec2 mSceneWindowSize{0, 0};
         ImVec2 mSceneWindowPos{0, 0};
         bool mSceneWindowFocused = false;
+        
+        // Gizmo state
+        int mGizmoOperation = 0; // 0=Translate, 1=Rotate, 2=Scale
     };
 }

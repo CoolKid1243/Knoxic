@@ -382,30 +382,61 @@ namespace knoxic {
                 ImGui::NewFrame();
 
                 // Enable docking with transparent background
-                ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
-                const ImGuiViewport* imgui_viewport = ImGui::GetMainViewport();
-                ImGui::SetNextWindowPos(imgui_viewport->WorkPos);
-                ImGui::SetNextWindowSize(imgui_viewport->WorkSize);
-                ImGui::SetNextWindowViewport(imgui_viewport->ID);
-                ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-                ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-                window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
-                window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
-                
-                ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.0f, 0.0f, 0.0f, 0.0f)); // Transparent background
-                ImGui::Begin("DockSpace", nullptr, window_flags);
-                ImGui::PopStyleColor();
-                ImGui::PopStyleVar(2);
-                
-                ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
-                ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode);
-                ImGui::End();
+                if (editorSystem->isEditorMode()) {
+                    ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDocking;
+                    const ImGuiViewport* imgui_viewport = ImGui::GetMainViewport();
+                    
+                    // Calculate space below menu bar and toolbar
+                    float menuBarHeight = ImGui::GetFrameHeight();
+                    float toolbarHeight = 40.0f;
+                    float topOffset = menuBarHeight + toolbarHeight;
+                    
+                    ImVec2 dockspacePos = ImVec2(imgui_viewport->WorkPos.x, imgui_viewport->WorkPos.y + topOffset);
+                    ImVec2 dockspaceSize = ImVec2(imgui_viewport->WorkSize.x, imgui_viewport->WorkSize.y - topOffset);
+                    
+                    ImGui::SetNextWindowPos(dockspacePos);
+                    ImGui::SetNextWindowSize(dockspaceSize);
+                    ImGui::SetNextWindowViewport(imgui_viewport->ID);
+                    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+                    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+                    window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
+                    window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
+                    
+                    ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.0f, 0.0f, 0.0f, 0.0f)); // Transparent background
+                    ImGui::Begin("DockSpace", nullptr, window_flags);
+                    ImGui::PopStyleColor();
+                    ImGui::PopStyleVar(2);
+                    
+                    ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
+                    ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode);
+                    ImGui::End();
+                } else {
+                    // Non-editor mode: use full viewport
+                    ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDocking;
+                    const ImGuiViewport* imgui_viewport = ImGui::GetMainViewport();
+                    ImGui::SetNextWindowPos(imgui_viewport->WorkPos);
+                    ImGui::SetNextWindowSize(imgui_viewport->WorkSize);
+                    ImGui::SetNextWindowViewport(imgui_viewport->ID);
+                    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+                    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+                    window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
+                    window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
+                    
+                    ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.0f, 0.0f, 0.0f, 0.0f)); // Transparent background
+                    ImGui::Begin("DockSpace", nullptr, window_flags);
+                    ImGui::PopStyleColor();
+                    ImGui::PopStyleVar(2);
+                    
+                    ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
+                    ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode);
+                    ImGui::End();
+                }
 
                 if (editorSystem->isEditorMode()) {
-                    editorSystem->renderUI();
+                    editorSystem->renderUI(camera);
                 } else {
                     // Position the window at top-left
-                    ImGui::SetNextWindowPos(ImVec2(3, 20), ImGuiCond_Always);  
+                    ImGui::SetNextWindowPos(ImVec2(3, 10), ImGuiCond_Always);  
                     ImGui::SetNextWindowBgAlpha(0.5f);
 
                     ImGui::Begin("Game Info", nullptr, 
