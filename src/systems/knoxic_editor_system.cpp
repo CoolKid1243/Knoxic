@@ -193,8 +193,7 @@ namespace knoxic {
         drawList->AddRect(canvasPos, ImVec2(canvasPos.x + canvasSize.x, canvasPos.y + canvasSize.y), IM_COL32(100, 100, 100, 255));
 
         // Display info
-        ImGui::SetCursorPos(ImVec2(10, 10));
-        ImGui::Text("Scene View");
+        ImGui::SetCursorPos(ImVec2(10, 30));
         ImGui::Text("Size: %.0f x %.0f", canvasSize.x, canvasSize.y);
     }
 

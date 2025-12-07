@@ -401,14 +401,21 @@ namespace knoxic {
                 ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode);
                 ImGui::End();
 
-                // Render editor UI if in editor mode
                 if (editorSystem->isEditorMode()) {
                     editorSystem->renderUI();
                 } else {
-                    // Simple info window in play mode
-                    ImGui::Begin("Game Info");
-                    ImGui::Text("Press F11 to enter Editor Mode");
+                    // Position the window at top-left
+                    ImGui::SetNextWindowPos(ImVec2(3, 20), ImGuiCond_Always);  
+                    ImGui::SetNextWindowBgAlpha(0.5f);
+
+                    ImGui::Begin("Game Info", nullptr, 
+                        ImGuiWindowFlags_NoMove | 
+                        ImGuiWindowFlags_NoResize | 
+                        ImGuiWindowFlags_AlwaysAutoResize);
+
+                    ImGui::Text("Press F10 to enter Editor Mode");
                     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+
                     ImGui::End();
                 }
 
