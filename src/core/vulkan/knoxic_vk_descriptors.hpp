@@ -69,6 +69,7 @@ namespace knoxic {
         bool allocateDescriptor(const VkDescriptorSetLayout descriptorSetLayout, VkDescriptorSet &descriptor) const;
         void freeDescriptors(std::vector<VkDescriptorSet> &descriptors) const;
         void resetPool();
+        VkDescriptorPool getPool() const { return descriptorPool; }
 
     private:
         KnoxicDevice &knoxicDevice;

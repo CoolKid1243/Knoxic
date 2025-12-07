@@ -28,20 +28,5 @@ namespace knoxic {
         if (glfwGetKey(window, keys.esc) == GLFW_PRESS) {
             glfwSetWindowShouldClose(window, true);
         }
-
-        // Toggle mouse with (TAB)
-        static bool tabPressedLastFrame = false;
-        if (glfwGetKey(window, keys.tab) == GLFW_PRESS) {
-            if (!tabPressedLastFrame) {
-                mouseHidden = !mouseHidden;
-                mouseController.mouseHidden = mouseHidden;
-
-                glfwSetInputMode(window, GLFW_CURSOR, mouseHidden ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
-                mouseController.resetCursor(window);
-            }
-            tabPressedLastFrame = true;
-        } else {
-            tabPressedLastFrame = false;
-        }
     }
 }

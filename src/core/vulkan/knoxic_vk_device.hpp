@@ -38,6 +38,7 @@ namespace knoxic {
 
         VkCommandPool getCommandPool() { return commandPool; }
         VkDevice device() { return device_; }
+        VkInstance getInstance() { return instance; }
         VkSurfaceKHR surface() { return surface_; }
         VkQueue graphicsQueue() { return graphicsQueue_; }
         VkQueue presentQueue() { return presentQueue_; }

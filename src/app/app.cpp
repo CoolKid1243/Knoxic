@@ -13,6 +13,7 @@
 #include "../systems/vulkan/knoxic_vk_spot_light_system.hpp"
 #include "../systems/vulkan/knoxic_vk_directional_light_system.hpp"
 #include "../systems/vulkan/knoxic_vk_material_system.hpp"
+#include "../systems/knoxic_editor_system.hpp"
 #include "../core/ecs/coordinator_instance.hpp"
 #include "../core/ecs/components.hpp"
 #include "../core/ecs/ecs_systems.hpp"
@@ -22,6 +23,10 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+
+#include <imgui/imgui.h>
+#include <imgui/backends/imgui_impl_glfw.h>
+#include <imgui/backends/imgui_impl_vulkan.h>
 
 #include <cassert>
 #include <memory>
@@ -39,6 +44,42 @@ namespace knoxic {
             .setMaxSets(1000)
             .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 4000)
             .build();
+
+        // Create ImGui descriptor pool
+        imguiPool = KnoxicDescriptorPool::Builder(knoxicDevice)
+            .setMaxSets(1000)
+            .addPoolSize(VK_DESCRIPTOR_TYPE_SAMPLER, 1000)
+            .addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000)
+            .addPoolSize(VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000)
+            .addPoolSize(VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1000)
+            .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1000)
+            .addPoolSize(VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1000)
+            .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000)
+            .addPoolSize(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000)
+            .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000)
+            .addPoolSize(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000)
+            .addPoolSize(VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000)
+            .build();
+
+        // Initialize ImGui
+        IMGUI_CHECKVERSION();
+        ImGui::CreateContext();
+        ImGuiIO& io = ImGui::GetIO();
+        io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+        io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+        // Viewports disabled for now - requires additional Vulkan setup for multi-viewport support
+        // io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+
+        ImGui::StyleColorsDark();
+
+        ImGuiStyle& style = ImGui::GetStyle();
+        // if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+        //     style.WindowRounding = 0.0f;
+        //     style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+        // }
+
+        // Setup Platform backend (Vulkan backend will be initialized in run() after swap chain is created)
+        ImGui_ImplGlfw_InitForVulkan(knoxicWindow.getGLFWwindow(), true);
 
         // Create post-processing system
         VkExtent2D extent = knoxicRenderer.getSwapChainExtent();
@@ -91,6 +132,11 @@ namespace knoxic {
     }
 
     App::~App() {
+        // Cleanup ImGui
+        ImGui_ImplVulkan_Shutdown();
+        ImGui_ImplGlfw_Shutdown();
+        ImGui::DestroyContext();
+
         // Ensure GPU resources inside ECS components are destroyed before Vulkan device
         if (renderableSystem) {
             for (auto entity : renderableSystem->mEntities) {
@@ -141,6 +187,27 @@ namespace knoxic {
                 .writeBuffer(0, &bufferInfo)
                 .build(globalDescriptorSets[i]);
         }
+
+        // Initialize ImGui Vulkan backend
+        ImGui_ImplVulkan_InitInfo init_info = {};
+        init_info.ApiVersion = VK_API_VERSION_1_0;
+        init_info.Instance = knoxicDevice.getInstance();
+        init_info.PhysicalDevice = knoxicDevice.getPhysicalDevice();
+        init_info.Device = knoxicDevice.device();
+        init_info.QueueFamily = knoxicDevice.findPhysicalQueueFamilies().graphicsFamily;
+        init_info.Queue = knoxicDevice.graphicsQueue();
+        init_info.PipelineCache = VK_NULL_HANDLE;
+        init_info.DescriptorPool = imguiPool->getPool();
+        init_info.DescriptorPoolSize = 0; // Using external pool
+        init_info.MinImageCount = KnoxicSwapChain::MAX_FRAMES_IN_FLIGHT;
+        init_info.ImageCount = KnoxicSwapChain::MAX_FRAMES_IN_FLIGHT;
+        init_info.UseDynamicRendering = false;
+        init_info.Allocator = nullptr;
+        init_info.CheckVkResultFn = nullptr;
+        init_info.PipelineInfoMain.RenderPass = knoxicRenderer.getSwapChainRenderPass();
+        init_info.PipelineInfoMain.Subpass = 0;
+        init_info.PipelineInfoMain.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+        ImGui_ImplVulkan_Init(&init_info);
 
         RenderSystem renderSystem {
             knoxicDevice,
@@ -193,6 +260,19 @@ namespace knoxic {
         MouseMovementController cameraControllerMouse{};
         KeybordMovementController cameraControllerKeybord{cameraControllerMouse};
 
+        // Initialize editor system
+        editorSystem = std::make_unique<KnoxicEditorSystem>(
+            knoxicWindow,
+            knoxicDevice,
+            knoxicRenderer,
+            cameraControllerMouse,
+            cameraControllerKeybord,
+            renderableSystem,
+            pointLightSystem,
+            spotLightSystem,
+            directionalLightSystem
+        );
+
         auto currentTime = std::chrono::high_resolution_clock::now();
         VkExtent2D previousExtent = knoxicRenderer.getSwapChainExtent();
 
@@ -205,8 +285,14 @@ namespace knoxic {
             float frameTime = std::chrono::duration<float, std::chrono::seconds::period>(newTime - currentTime).count();
             currentTime = newTime;
 
-            cameraControllerKeybord.moveInPlaneXZ(knoxicWindow.getGLFWwindow(), frameTime, viewerObject);
-            cameraControllerMouse.updateLook(knoxicWindow.getGLFWwindow(), frameTime, viewerObject);
+            // Update editor system
+            editorSystem->update(knoxicWindow.getGLFWwindow(), frameTime);
+
+            // Only update camera controls if not in editor mode
+            if (!editorSystem->isEditorMode()) {
+                cameraControllerKeybord.moveInPlaneXZ(knoxicWindow.getGLFWwindow(), frameTime, viewerObject);
+                cameraControllerMouse.updateLook(knoxicWindow.getGLFWwindow(), frameTime, viewerObject);
+            }
             camera.setViewYXZ(viewerObject.transform.translation, viewerObject.transform.rotation);
 
             float aspect = knoxicRenderer.getAspectRatio();
@@ -289,6 +375,47 @@ namespace knoxic {
                     frameIndex,
                     postProcSettings
                 );
+
+                // Render ImGui
+                ImGui_ImplVulkan_NewFrame();
+                ImGui_ImplGlfw_NewFrame();
+                ImGui::NewFrame();
+
+                // Enable docking with transparent background
+                ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
+                const ImGuiViewport* imgui_viewport = ImGui::GetMainViewport();
+                ImGui::SetNextWindowPos(imgui_viewport->WorkPos);
+                ImGui::SetNextWindowSize(imgui_viewport->WorkSize);
+                ImGui::SetNextWindowViewport(imgui_viewport->ID);
+                ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+                ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+                window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
+                window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
+                
+                ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.0f, 0.0f, 0.0f, 0.0f)); // Transparent background
+                ImGui::Begin("DockSpace", nullptr, window_flags);
+                ImGui::PopStyleColor();
+                ImGui::PopStyleVar(2);
+                
+                ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
+                ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode);
+                ImGui::End();
+
+                // Render editor UI if in editor mode
+                if (editorSystem->isEditorMode()) {
+                    editorSystem->renderUI();
+                } else {
+                    // Simple info window in play mode
+                    ImGui::Begin("Game Info");
+                    ImGui::Text("Press F11 to enter Editor Mode");
+                    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+                    ImGui::End();
+                }
+
+                ImGui::Render();
+                ImDrawData* draw_data = ImGui::GetDrawData();
+                ImGui_ImplVulkan_RenderDrawData(draw_data, commandBuffer);
+
                 knoxicRenderer.endSwapChainRenderPass(commandBuffer);
                 knoxicRenderer.endFrame();
             }

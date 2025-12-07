@@ -6,6 +6,7 @@
 #include "../core/vulkan/knoxic_vk_descriptors.hpp"
 #include "../core/ecs/ecs_systems.hpp"
 #include "../systems/vulkan/knoxic_vk_post_process_system.hpp"
+#include "../systems/knoxic_editor_system.hpp"
 
 #include <memory>
 
@@ -36,6 +37,7 @@ namespace knoxic {
         // Order of declarations matters
         std::unique_ptr<KnoxicDescriptorPool> globalPool{};
         std::unique_ptr<KnoxicDescriptorPool> materialPool{};
+        std::unique_ptr<KnoxicDescriptorPool> imguiPool{};
         std::unique_ptr<PostProcessSystem> postProcessSystem{};
 
         // ECS systems
@@ -43,5 +45,8 @@ namespace knoxic {
         std::shared_ptr<PointLightECSSystem> pointLightSystem;
         std::shared_ptr<SpotLightECSSystem> spotLightSystem;
         std::shared_ptr<DirectionalLightECSSystem> directionalLightSystem;
+
+        // Editor system
+        std::unique_ptr<KnoxicEditorSystem> editorSystem;
     };
 }
