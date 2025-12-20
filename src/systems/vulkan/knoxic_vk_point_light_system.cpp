@@ -85,25 +85,6 @@ namespace knoxic {
 
             assert(lightIndex < MAX_LIGHTS && "Point lights exceed maximum specified limit");
 
-            // Animate the point lights
-            if (transform.translation.x > -3.0f && transform.translation.x < 3.0f) {
-                auto rotateLight = glm::rotate(
-                    glm::mat4(1.0f),
-                    frameInfo.frameTime * 0.6f,
-                    glm::vec3{0.0f, -1.0f, 0.0f}
-                );
-                transform.translation = glm::vec3(rotateLight * glm::vec4(transform.translation, 1.0f));
-            } else if (transform.translation.x > 7.0f && transform.translation.x < 13.0f) {
-                transform.translation.x = 10.0f + sin(time * 1.0f) * 2.0f;
-            } else if (transform.translation.x > -13.0f && transform.translation.x < -7.0f) {
-                float pendulumAngle = sin(time * 0.6f) * (glm::pi<float>() / 2.0f);
-                glm::vec3 helmetCenter = glm::vec3(-10.0f, 0.5f, 0.0f);
-                float radius = 2.0f;
-                transform.translation.x = helmetCenter.x - radius * sin(pendulumAngle);
-                transform.translation.y = helmetCenter.y - 1.0f;
-                transform.translation.z = helmetCenter.z - radius * cos(pendulumAngle) - 0.3f;
-            }
-
             glm::vec3 color = glm::vec3(1.0f);
             if (gCoordinator.HasComponent<ColorComponent>(entity)) {
                 color = gCoordinator.GetComponent<ColorComponent>(entity).color;
