@@ -96,32 +96,28 @@ namespace knoxic {
         gCoordinator.RegisterComponent<DirectionalLightComponent>();
         gCoordinator.RegisterComponent<PostProcessingComponent>();
 
-        renderableSystem = gCoordinator.RegisterSystem<RenderableSystem>();
-        {
+        renderableSystem = gCoordinator.RegisterSystem<RenderableSystem>(); {
             Signature signature;
             signature.set(gCoordinator.GetComponentType<TransformComponent>());
             signature.set(gCoordinator.GetComponentType<ModelComponent>());
             gCoordinator.SetSystemSignature<RenderableSystem>(signature);
         }
 
-        pointLightSystem = gCoordinator.RegisterSystem<PointLightECSSystem>();
-        {
+        pointLightSystem = gCoordinator.RegisterSystem<PointLightECSSystem>(); {
             Signature signature;
             signature.set(gCoordinator.GetComponentType<TransformComponent>());
             signature.set(gCoordinator.GetComponentType<PointLightComponent>());
             gCoordinator.SetSystemSignature<PointLightECSSystem>(signature);
         }
 
-        spotLightSystem = gCoordinator.RegisterSystem<SpotLightECSSystem>();
-        {
+        spotLightSystem = gCoordinator.RegisterSystem<SpotLightECSSystem>(); {
             Signature signature;
             signature.set(gCoordinator.GetComponentType<TransformComponent>());
             signature.set(gCoordinator.GetComponentType<SpotLightComponent>());
             gCoordinator.SetSystemSignature<SpotLightECSSystem>(signature);
         }
 
-        directionalLightSystem = gCoordinator.RegisterSystem<DirectionalLightECSSystem>();
-        {
+        directionalLightSystem = gCoordinator.RegisterSystem<DirectionalLightECSSystem>(); {
             Signature signature;
             signature.set(gCoordinator.GetComponentType<TransformComponent>());
             signature.set(gCoordinator.GetComponentType<DirectionalLightComponent>());

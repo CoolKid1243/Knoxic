@@ -167,9 +167,8 @@ namespace knoxic {
                 if (ImGui::MenuItem("Save Scene", "Ctrl+S")) {
                     // TODO: Implement save scene
                 }
-                ImGui::Separator();
-                if (ImGui::MenuItem("Exit", "Alt+F4")) {
-                    // TODO: Handle exit
+                if (ImGui::MenuItem("Save Scene As", "Ctrl+shift+S")) {
+                    // TODO: Implement save scene as
                 }
                 ImGui::EndMenu();
             }
@@ -547,7 +546,9 @@ namespace knoxic {
     }
 
     void KnoxicEditorSystem::renderInspectorWindow() {
-        if (mSelectedEntity == 0) {
+        // Set to -1 due to errors with selecting the first entity in the scene. Was orinally 0
+        // TODO: Find a better solution
+        if (mSelectedEntity == -1) {
             ImGui::TextWrapped("No entity selected");
             ImGui::Spacing();
             ImGui::TextWrapped("Select an entity from the Hierarchy to view its components.");
