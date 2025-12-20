@@ -27,6 +27,7 @@ namespace knoxic {
 
     private:
         void loadGameObjects();
+        void loadScene();
 
         Entity cameraEntity;
 

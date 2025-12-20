@@ -458,6 +458,10 @@ namespace knoxic {
         vkDeviceWaitIdle(knoxicDevice.device());
     }
 
+    void App::loadScene() {
+        // Not implemented yet
+    }
+
     void App::loadGameObjects() {
         std::shared_ptr<KnoxicModel> knoxicModel;
 
