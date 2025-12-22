@@ -565,7 +565,7 @@ namespace knoxic {
             
             // Display Transform Component
             if (gCoordinator.HasComponent<TransformComponent>(mSelectedEntity)) {
-                if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen)) {
+                if (ImGui::CollapsingHeader("Transform Component", ImGuiTreeNodeFlags_DefaultOpen)) {
                     auto& transform = gCoordinator.GetComponent<TransformComponent>(mSelectedEntity);
                     
                     ImGui::PushItemWidth(-1);
@@ -592,7 +592,7 @@ namespace knoxic {
 
             // Display Color Component
             if (gCoordinator.HasComponent<ColorComponent>(mSelectedEntity)) {
-                if (ImGui::CollapsingHeader("Color", ImGuiTreeNodeFlags_DefaultOpen)) {
+                if (ImGui::CollapsingHeader("Color Component", ImGuiTreeNodeFlags_DefaultOpen)) {
                     auto& color = gCoordinator.GetComponent<ColorComponent>(mSelectedEntity);
                     float colorValues[3] = {color.color.r, color.color.g, color.color.b};
                     if (ImGui::ColorEdit3("Color", colorValues)) {
@@ -603,7 +603,7 @@ namespace knoxic {
 
             // Display Point Light Component
             if (gCoordinator.HasComponent<PointLightComponent>(mSelectedEntity)) {
-                if (ImGui::CollapsingHeader("Point Light", ImGuiTreeNodeFlags_DefaultOpen)) {
+                if (ImGui::CollapsingHeader("Point Light Component", ImGuiTreeNodeFlags_DefaultOpen)) {
                     auto& light = gCoordinator.GetComponent<PointLightComponent>(mSelectedEntity);
                     ImGui::DragFloat("Intensity", &light.lightIntensity, 0.1f, 0.0f, 10.0f);
                 }
@@ -611,7 +611,7 @@ namespace knoxic {
 
             // Display Spot Light Component
             if (gCoordinator.HasComponent<SpotLightComponent>(mSelectedEntity)) {
-                if (ImGui::CollapsingHeader("Spot Light", ImGuiTreeNodeFlags_DefaultOpen)) {
+                if (ImGui::CollapsingHeader("Spot Light Component", ImGuiTreeNodeFlags_DefaultOpen)) {
                     auto& light = gCoordinator.GetComponent<SpotLightComponent>(mSelectedEntity);
                     ImGui::DragFloat("Intensity", &light.lightIntensity, 0.1f, 0.0f, 10.0f);
                     ImGui::DragFloat("Inner Cutoff", &light.innerCutoff, 0.1f, 0.0f, 90.0f);
@@ -621,7 +621,7 @@ namespace knoxic {
 
             // Display Directional Light Component
             if (gCoordinator.HasComponent<DirectionalLightComponent>(mSelectedEntity)) {
-                if (ImGui::CollapsingHeader("Directional Light", ImGuiTreeNodeFlags_DefaultOpen)) {
+                if (ImGui::CollapsingHeader("Directional Light Component", ImGuiTreeNodeFlags_DefaultOpen)) {
                     auto& light = gCoordinator.GetComponent<DirectionalLightComponent>(mSelectedEntity);
                     ImGui::DragFloat("Intensity", &light.lightIntensity, 0.1f, 0.0f, 10.0f);
                 }
@@ -629,7 +629,7 @@ namespace knoxic {
 
             // Display Material Component
             if (gCoordinator.HasComponent<MaterialComponent>(mSelectedEntity)) {
-                if (ImGui::CollapsingHeader("Material", ImGuiTreeNodeFlags_DefaultOpen)) {
+                if (ImGui::CollapsingHeader("Material Component", ImGuiTreeNodeFlags_DefaultOpen)) {
                     auto& materialComp = gCoordinator.GetComponent<MaterialComponent>(mSelectedEntity);
                     KnoxicMaterial* mat = materialComp.material.get();
 
@@ -764,7 +764,7 @@ namespace knoxic {
 
             // Display Model Component
             if (gCoordinator.HasComponent<ModelComponent>(mSelectedEntity)) {
-                if (ImGui::CollapsingHeader("Model", ImGuiTreeNodeFlags_DefaultOpen)) {
+                if (ImGui::CollapsingHeader("Model Component", ImGuiTreeNodeFlags_DefaultOpen)) {
                     ImGui::Text("Model Component");
                     ImGui::Text("(Model info display not yet implemented)");
                 }

@@ -381,6 +381,7 @@ namespace knoxic {
             std::cout << "\rPresent mode: " << std::setw(10) << std::left << modeStr << std::endl;
         };
 
+        // V-Sync
         for (const auto &availablePresentMode : availablePresentModes) {
             if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
                 if (lastPrintedMode != VK_PRESENT_MODE_MAILBOX_KHR) {
@@ -391,6 +392,7 @@ namespace knoxic {
             }
         }
 
+        // No V-Sync
         // for (const auto &availablePresentMode : availablePresentModes) {
         //     if (availablePresentMode == VK_PRESENT_MODE_IMMEDIATE_KHR) {
         //         if (lastPrintedMode != VK_PRESENT_MODE_IMMEDIATE_KHR) {

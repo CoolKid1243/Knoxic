@@ -149,6 +149,8 @@ namespace knoxic {
             // Make the object neon pink if it cant load or find the material
             failedAlbedo = true;
             properties.albedo = glm::vec3(1.0f, 0.0f, 1.0f); // pink
+            properties.emissionColor = glm::vec3(1.0f, 0.0f, 1.0f); // pink
+            properties.emissionStrength = 1.0f;
         }
     }
 

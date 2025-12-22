@@ -477,6 +477,19 @@ namespace knoxic {
         // gCoordinator.AddComponent(dirLight1, dl1C);
         // gCoordinator.AddComponent(dirLight1, ColorComponent{glm::vec3{1.0f, 0.9f, 0.7f}});
 
+        // Creates the abandond shack entity
+        // knoxicModel = KnoxicModel::createModelFromFile(knoxicDevice, "res/sketchfab/abandoned_shack/scene.gltf");
+        // Entity shack = gCoordinator.CreateEntity();
+        // TransformComponent shackT{};
+        // shackT.translation = {-10.0f, 0.5f, 0.0f};
+        // shackT.scale = {1.0f, 1.0f, 1.0f};
+        // shackT.rotation = {glm::radians(180.0f), 0.0f, 0.0f};
+        // gCoordinator.AddComponent(shack, shackT);
+        // gCoordinator.AddComponent(shack, ModelComponent{knoxicModel});
+        // MaterialComponent shackMat{std::make_shared<KnoxicMaterial>(knoxicDevice)};
+        // shackMat.loadAlbedoTexture("res/sketchfab/abandoned_shack/textures/Bark_baseColor.jpeg");
+        // gCoordinator.AddComponent(shack, shackMat);
+
         // -- First scene --
         {
             // Creates the bloom text entity
